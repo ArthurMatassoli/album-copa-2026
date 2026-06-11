@@ -6,88 +6,284 @@
     <title>Álbum Copa 2026</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .no-context {
-            -webkit-touch-callout: none;
-            user-select: none;
-        }
+        .no-context { -webkit-touch-callout: none; user-select: none; }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f8fafc; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans pb-10">
+<body class="bg-slate-50 text-slate-800 font-sans h-screen flex flex-col">
 
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-sm">
-        <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
-            <h1 class="text-xl font-extrabold text-indigo-900 tracking-tight">Álbum 2026</h1>
-            
-            <div class="flex items-center gap-5">
-                <label class="cursor-pointer text-indigo-600 hover:text-indigo-800 text-sm font-semibold transition flex items-center">
-                    <svg class="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                    Importar CSV
-                    <input type="file" id="csv-upload" accept=".csv" class="hidden">
-                </label>
+    <div id="auth-screen" class="flex-1 items-center justify-center p-4 fade-in overflow-y-auto py-10" style="display: flex;">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-100 my-auto">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-extrabold text-indigo-900 tracking-tight mb-2">Álbum 2026</h1>
+                <p class="text-slate-500 text-sm" id="auth-subtitle">Crie sua conta para acessar o projeto.</p>
+            </div>
 
-                <div class="relative group">
-                    <button class="p-2 text-slate-500 hover:bg-slate-100 rounded-md transition focus:outline-none">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                    </button>
+            <form id="auth-form" class="space-y-4" onsubmit="handleAuth(event)">
+                <div id="signup-fields-top" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Nome Completo</label>
+                        <input type="text" id="auth-name" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500 transition" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Celular (WhatsApp)</label>
+                        <input type="tel" id="auth-phone" placeholder="(XX) XXXXX-XXXX" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500 transition" required>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">E-mail</label>
+                    <input type="email" id="auth-email" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                </div>
+                
+                <div>
+                    <div class="flex justify-between items-end mb-1">
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Senha</label>
+                        <button type="button" id="forgot-password-btn" onclick="recuperarSenha()" class="text-xs font-bold text-indigo-600 hover:underline focus:outline-none" style="display: none;">
+                            Esqueci a senha
+                        </button>
+                    </div>
+                    <input type="password" id="auth-password" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                </div>
+
+                <div id="confirm-password-container">
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Confirmar Senha</label>
+                    <input type="password" id="auth-confirm-password" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500 transition" required>
+                </div>
+
+                <p id="auth-error-msg" class="text-red-500 text-xs font-bold text-center hidden pt-2"></p>
+
+                <button type="submit" id="auth-submit-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg shadow-md transition transform active:scale-95 mt-4">
+                    Cadastrar e Solicitar Acesso
+                </button>
+            </form>
+
+            <div class="mt-6 text-center text-sm">
+                <span class="text-slate-500" id="auth-toggle-text">Já tem uma conta?</span>
+                <button type="button" onclick="toggleAuthMode()" class="text-indigo-600 font-bold hover:underline ml-1 focus:outline-none" id="auth-toggle-btn">Fazer Login</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-screen" class="fade-in pb-10" style="display: none;">
+        
+        <header class="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-sm">
+            <div class="max-w-5xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-3">
+                
+                <div class="flex items-center gap-3">
+                    <h1 class="text-xl font-extrabold text-indigo-900 tracking-tight">Álbum 2026</h1>
+                    <button onclick="toggleAdminModal()" class="text-xs bg-slate-800 text-white px-2 py-1 rounded font-semibold hover:bg-slate-700 transition">Admin Panel</button>
+                </div>
+                
+                <div class="flex flex-wrap items-center gap-2 sm:gap-4 justify-center">
                     
-                    <div class="absolute right-0 mt-2 w-64 bg-white border border-slate-100 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 p-4 transform origin-top-right">
-                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Seu Progresso</h3>
-                        <div class="flex items-end gap-2 mb-1">
-                            <span id="progress-percent" class="text-3xl font-black text-indigo-600">0%</span>
-                        </div>
-                        <p id="progress-text" class="text-sm text-slate-500 mb-3">0 de 0 figurinhas</p>
-                        
-                        <div class="space-y-2 text-xs text-slate-600 border-t pt-3">
-                            <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-white border border-slate-300"></div> Faltando</div>
-                            <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-indigo-500"></div> Tenho</div>
-                            <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-amber-400"></div> Repetida</div>
+                    <select id="sort-select" class="text-xs sm:text-sm bg-slate-100 border border-slate-200 text-slate-700 font-semibold py-1.5 px-2 rounded-md outline-none cursor-pointer hover:bg-slate-200 transition">
+                        <option value="album">Ordem do Álbum</option>
+                        <option value="alfabetica">Ordem Alfabética</option>
+                        <option value="preenchidas">Mais Preenchidas</option>
+                    </select>
+
+                    <label class="cursor-pointer text-indigo-600 hover:bg-indigo-50 text-sm font-semibold transition flex items-center bg-white border border-slate-200 py-1.5 px-3 rounded-md">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                        <span class="hidden sm:inline">Importar CSV</span>
+                        <input type="file" id="csv-upload" accept=".csv" class="hidden">
+                    </label>
+
+                    <button onclick="compartilharWhatsApp()" class="text-green-700 hover:bg-green-50 text-sm font-semibold transition flex items-center bg-white border border-green-200 py-1.5 px-3 rounded-md shadow-sm">
+                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                        <span class="hidden md:inline">Faltantes</span>
+                    </button>
+
+                    <div class="relative group">
+                        <button class="p-2 text-slate-500 hover:bg-slate-100 rounded-md transition outline-none">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                        </button>
+                        <div class="absolute right-0 mt-2 w-64 bg-white border border-slate-100 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 p-4 transform origin-top-right">
+                            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Seu Progresso</h3>
+                            <div class="flex items-end gap-2 mb-1"><span id="progress-percent" class="text-3xl font-black text-indigo-600">0%</span></div>
+                            <p id="progress-text" class="text-sm text-slate-500 mb-3">0 de 0 figurinhas</p>
+                            <div class="space-y-2 text-xs text-slate-600 border-t pt-3">
+                                <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-white border border-slate-300"></div> Faltando</div>
+                                <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-indigo-500"></div> Tenho</div>
+                                <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-amber-400"></div> Repetida</div>
+                            </div>
+                            <button onclick="logout()" class="mt-4 w-full text-xs text-red-500 font-bold border border-red-100 rounded py-1 hover:bg-red-50 transition">Sair da Conta</button>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </header>
+        </header>
 
-    <main class="max-w-5xl mx-auto mt-8 px-4" id="album-container"></main>
+        <main class="max-w-5xl mx-auto mt-6 sm:mt-8 px-4" id="album-container"></main>
+    </div>
+
+    <div id="admin-modal" class="fixed inset-0 bg-slate-900 bg-opacity-50 flex justify-center items-center z-50 hidden fade-in">
+        <div class="bg-white w-full max-w-lg rounded-xl shadow-2xl overflow-hidden m-4">
+            <div class="bg-indigo-900 text-white px-6 py-4 flex justify-between items-center">
+                <h2 class="font-bold text-lg">Aprovações Pendentes</h2>
+                <button onclick="toggleAdminModal()" class="text-indigo-200 hover:text-white transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+            <div class="p-6 bg-slate-50 h-64 overflow-y-auto">
+                <p class="text-sm text-slate-500 mb-4">Quando o banco for conectado, as pessoas que usarem o seu link aparecerão aqui.</p>
+                
+                <div class="bg-white border border-slate-200 rounded-lg p-3 flex justify-between items-center mb-3 shadow-sm">
+                    <div>
+                        <p class="font-bold text-sm text-slate-800">João Silva</p>
+                        <p class="text-xs text-slate-500">📱 (21) 99999-9999</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="bg-green-500 hover:bg-green-600 text-white text-xs font-bold px-3 py-1.5 rounded transition">Aprovar</button>
+                        <button class="bg-red-100 hover:bg-red-200 text-red-600 text-xs font-bold px-3 py-1.5 rounded transition">Recusar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
-        // Lista base de seleções para deixar o álbum visível desde o começo
-        const selecoesBase = [
-            { id: 'CC', nome: 'Coca-Cola (CC)', total: 7 },
-            { id: 'ALG', nome: 'Argélia (ALG)', total: 20 },
-            { id: 'ARG', nome: 'Argentina (ARG)', total: 20 },
-            { id: 'AUS', nome: 'Austrália (AUS)', total: 20 },
-            { id: 'AUT', nome: 'Áustria (AUT)', total: 20 },
-            { id: 'BEL', nome: 'Bélgica (BEL)', total: 20 },
-            { id: 'BIH', nome: 'Bósnia (BIH)', total: 20 },
-            { id: 'BRA', nome: 'Brasil (BRA)', total: 20 },
-            { id: 'ENG', nome: 'Inglaterra (ENG)', total: 20 },
-            { id: 'ESP', nome: 'Espanha (ESP)', total: 20 },
-            { id: 'FRA', nome: 'França (FRA)', total: 20 },
-            { id: 'GER', nome: 'Alemanha (GER)', total: 20 },
-            { id: 'POR', nome: 'Portugal (POR)', total: 20 },
-            { id: 'QAT', nome: 'Catar (QAT)', total: 20 },
-            { id: 'RSA', nome: 'África do Sul (RSA)', total: 20 },
-            { id: 'SCO', nome: 'Escócia (SCO)', total: 20 },
-            { id: 'SEN', nome: 'Senegal (SEN)', total: 20 },
-            { id: 'SUI', nome: 'Suíça (SUI)', total: 20 },
-            { id: 'SWE', nome: 'Suécia (SWE)', total: 20 },
-            { id: 'TUN', nome: 'Tunísia (TUN)', total: 20 }
+        // ------------------------- LÓGICA DE AUTENTICAÇÃO MOCK -------------------------
+        let isSignup = true;
+        
+        function toggleAuthMode() {
+            isSignup = !isSignup;
+            
+            // Ocultar a mensagem de erro sempre que trocar de tela
+            document.getElementById('auth-error-msg').classList.add('hidden');
+            
+            document.getElementById('signup-fields-top').style.display = isSignup ? 'block' : 'none';
+            document.getElementById('confirm-password-container').style.display = isSignup ? 'block' : 'none';
+            document.getElementById('forgot-password-btn').style.display = isSignup ? 'none' : 'block';
+            
+            document.getElementById('auth-submit-btn').textContent = isSignup ? 'Cadastrar e Solicitar Acesso' : 'Entrar no Projeto';
+            document.getElementById('auth-subtitle').textContent = isSignup ? 'Crie sua conta para acessar o projeto.' : 'Bem-vindo de volta!';
+            document.getElementById('auth-toggle-text').textContent = isSignup ? 'Já tem uma conta?' : 'Ainda não tem conta?';
+            document.getElementById('auth-toggle-btn').textContent = isSignup ? 'Fazer Login' : 'Cadastrar';
+            
+            document.getElementById('auth-name').required = isSignup;
+            document.getElementById('auth-phone').required = isSignup;
+            document.getElementById('auth-confirm-password').required = isSignup;
+        }
+
+        function handleAuth(e) {
+            e.preventDefault(); // Bloqueia o recarregamento da página IMEDIATAMENTE
+            
+            const errorMsg = document.getElementById('auth-error-msg');
+            errorMsg.classList.add('hidden'); // Limpa erros antigos
+
+            const email = document.getElementById('auth-email').value;
+            const pass = document.getElementById('auth-password').value;
+            
+            if (isSignup) {
+                const confPass = document.getElementById('auth-confirm-password').value;
+                if (pass !== confPass) {
+                    // Exibe a mensagem de erro na tela de forma visual e encerra a função
+                    errorMsg.textContent = "Atenção: As senhas digitadas não coincidem.";
+                    errorMsg.classList.remove('hidden');
+                    return; 
+                }
+            }
+
+            // Se as senhas baterem ou for Login, prossegue:
+            localStorage.setItem('currentUser', email);
+            checkAuth();
+        }
+
+        function recuperarSenha() {
+            const email = document.getElementById('auth-email').value;
+            const errorMsg = document.getElementById('auth-error-msg');
+            
+            if (!email) {
+                errorMsg.textContent = "Preencha seu E-mail acima para receber o link de recuperação.";
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+            alert(`Um e-mail de redefinição de senha foi enviado para: ${email}`);
+        }
+
+        function checkAuth() {
+            const user = localStorage.getItem('currentUser');
+            if (user) {
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('app-screen').style.display = 'block';
+                renderizarAlbum(); 
+            } else {
+                document.getElementById('app-screen').style.display = 'none';
+                document.getElementById('auth-screen').style.display = 'flex';
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('currentUser');
+            checkAuth();
+            if(!isSignup) toggleAuthMode(); // Volta para tela de cadastro ao deslogar
+            // Limpa os campos
+            document.getElementById('auth-password').value = '';
+            document.getElementById('auth-confirm-password').value = '';
+            document.getElementById('auth-error-msg').classList.add('hidden');
+        }
+
+        function toggleAdminModal() {
+            document.getElementById('admin-modal').classList.toggle('hidden');
+        }
+
+        // ------------------------- LÓGICA DE COMPARTILHAMENTO WHATSAPP -------------------------
+        function compartilharWhatsApp() {
+            if (selecoes.length === 0) {
+                alert("Seu álbum está vazio! Importe o CSV primeiro.");
+                return;
+            }
+
+            let text = "⚽ Olá! Estou completando meu Álbum da Copa 2026. Alguém tem essas figurinhas para trocar?\n\n*FALTAM:*\n";
+            let faltamTotal = 0;
+
+            selecoes.forEach(selecao => {
+                let missing = [];
+                for (let i = selecao.start; i <= selecao.end; i++) {
+                    const key = `${selecao.originalId}-${i}`;
+                    if (!figurinhasSalvas[key] || figurinhasSalvas[key] === 0) {
+                        missing.push(i);
+                        faltamTotal++;
+                    }
+                }
+                if (missing.length > 0) {
+                    text += `*${selecao.nome}*: ${missing.join(', ')}\n`;
+                }
+            });
+
+            if (faltamTotal === 0) {
+                alert("Parabéns! O seu álbum está 100% completo!");
+                return;
+            }
+
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+        }
+
+        // ------------------------- LÓGICA ORIGINAL DO ÁLBUM -------------------------
+        const ordemDaFoto = [
+            'FWC_1', 'MEX', 'RSA', 'KOR', 'CZE', 'CAN', 'BIH', 'QAT', 'SUI',
+            'BRA', 'MAR', 'HAI', 'SCO', 'USA', 'PAR', 'AUS', 'TUR',
+            'GER', 'CUW', 'CIV', 'ECU', 'NED', 'JPN', 'SWE', 'TUN',
+            'BEL', 'EGY', 'IRN', 'NZL', 'ESP', 'CPV', 'KSA', 'URU',
+            'FRA', 'SEN', 'IRQ', 'NOR', 'ARG', 'ALG', 'AUT', 'JOR',
+            'POR', 'COD', 'UZB', 'COL', 'ENG', 'CRO', 'GHA', 'PAN',
+            'FWC_2', 'CC'
         ];
 
-        // Carrega as seleções do cache ou usa a base. Carrega as figurinhas.
-        let selecoes = JSON.parse(localStorage.getItem('albumSelecoes_v3')) || selecoesBase;
-        let figurinhasSalvas = JSON.parse(localStorage.getItem('albumCopa2026_v3')) || {};
+        let selecoes = JSON.parse(localStorage.getItem('albumSelecoes_v9')) || [];
+        let figurinhasSalvas = JSON.parse(localStorage.getItem('albumCopa2026_v9')) || {};
 
         const container = document.getElementById('album-container');
         const progressPercent = document.getElementById('progress-percent');
         const progressText = document.getElementById('progress-text');
+        const sortSelect = document.getElementById('sort-select');
 
-        // Lida com a importação do CSV
+        sortSelect.addEventListener('change', renderizarAlbum);
+
         document.getElementById('csv-upload').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -97,81 +293,130 @@
         });
 
         function processarCSV(csvText) {
-            // Remove o \r para evitar problemas de formatação do Windows e divide por linhas
             const lines = csvText.replace(/\r/g, '').split('\n');
-            let figurinhasImportadas = 0;
+            let newState = {};
+            let newSelecoes = [];
 
-            // Procura a linha de cabeçalho dinamicamente
-            let startRow = 1;
             for (let i = 0; i < lines.length; i++) {
-                if (lines[i].toLowerCase().includes('seleções') || lines[i].toLowerCase().includes('selecoes')) {
-                    startRow = i + 1;
-                    break;
-                }
-            }
-
-            // Lê as linhas com os dados
-            for (let i = startRow; i < lines.length; i++) {
                 const line = lines[i].trim();
                 if (!line) continue;
                 
                 const cols = line.split(',');
-                // Na sua planilha, as siglas estão na segunda coluna (índice 1)
-                const selecaoId = cols[1] ? cols[1].trim() : null; 
+                const selecaoId = cols[1] ? cols[1].trim() : ''; 
                 
-                if (!selecaoId) continue;
+                if (!selecaoId || selecaoId.toLowerCase() === 'seleções' || selecaoId.toLowerCase() === 'total') continue;
 
-                // Verifica quantas colunas de figurinhas têm preenchimento nessa linha (até 20)
-                let maxFigurinhas = 0;
-                for (let j = 1; j <= 20; j++) {
-                    if (cols[j + 1] !== undefined && cols[j + 1] !== '') {
-                        maxFigurinhas = j;
-                        const value = cols[j + 1].trim().toLowerCase();
-                        // Se estiver True ou Verdadeiro na planilha, marca como "Tenho" (1)
-                        if (value === 'true' || value === 'verdadeiro' || value === '1') {
-                            figurinhasSalvas[`${selecaoId}-${j}`] = 1;
-                            figurinhasImportadas++;
+                if (selecaoId === 'FWC') {
+                    if (!newSelecoes.find(s => s.id === 'FWC_1')) newSelecoes.push({ id: 'FWC_1', originalId: 'FWC', nome: 'FWC (1 ao 8)', start: 1, end: 8, leituraIndex: newSelecoes.length });
+                    if (!newSelecoes.find(s => s.id === 'FWC_2')) newSelecoes.push({ id: 'FWC_2', originalId: 'FWC', nome: 'FWC (9 ao 19)', start: 9, end: 19, leituraIndex: newSelecoes.length });
+                    
+                    for (let j = 1; j <= 19; j++) {
+                        if (['true', 'verdadeiro', '1'].includes(cols[j + 1] ? cols[j + 1].trim().toLowerCase() : '')) newState[`FWC-${j}`] = 1; 
+                    }
+                } else {
+                    let maxFigurinhas = 0;
+                    for (let j = 1; j <= 50; j++) {
+                        if (cols[j + 1] !== undefined && cols[j + 1].trim() !== '') {
+                            if (['true', 'false', 'verdadeiro', 'falso', '0', '1'].includes(cols[j + 1].trim().toLowerCase())) maxFigurinhas = Math.max(maxFigurinhas, j);
+                        }
+                    }
+
+                    if (maxFigurinhas > 0) {
+                        newSelecoes.push({ id: selecaoId, originalId: selecaoId, nome: selecaoId, start: 1, end: maxFigurinhas, leituraIndex: newSelecoes.length });
+                        for (let j = 1; j <= maxFigurinhas; j++) {
+                            if (['true', 'verdadeiro', '1'].includes(cols[j + 1] ? cols[j + 1].trim().toLowerCase() : '')) newState[`${selecaoId}-${j}`] = 1; 
                         }
                     }
                 }
-
-                // Se essa seleção estiver na planilha mas não estiver na nossa lista base, adiciona ela
-                const selecaoExiste = selecoes.find(s => s.id === selecaoId);
-                if (!selecaoExiste && maxFigurinhas > 0) {
-                    selecoes.push({ id: selecaoId, nome: selecaoId, total: maxFigurinhas });
-                }
             }
 
-            salvarDados();
-            renderizarAlbum();
-            alert(`Planilha lida com sucesso! ${figurinhasImportadas} figurinhas foram marcadas.`);
+            if (newSelecoes.length > 0) {
+                selecoes = newSelecoes;
+                figurinhasSalvas = newState;
+                salvarDados();
+                renderizarAlbum();
+                alert(`Sucesso! Planilha lida e estruturada.`);
+            } else {
+                alert('Não foi possível ler as figurinhas. Verifique a planilha.');
+            }
         }
 
         function salvarDados() {
-            localStorage.setItem('albumSelecoes_v3', JSON.stringify(selecoes));
-            localStorage.setItem('albumCopa2026_v3', JSON.stringify(figurinhasSalvas));
+            localStorage.setItem('albumSelecoes_v9', JSON.stringify(selecoes));
+            localStorage.setItem('albumCopa2026_v9', JSON.stringify(figurinhasSalvas));
+        }
+
+        function contarPreenchidas(selecao) {
+            let count = 0;
+            for (let i = selecao.start; i <= selecao.end; i++) {
+                if (figurinhasSalvas[`${selecao.originalId}-${i}`] > 0) count++;
+            }
+            return count;
         }
 
         function renderizarAlbum() {
             container.innerHTML = '';
+            
+            if (selecoes.length === 0) {
+                container.innerHTML = `<div class="text-center text-slate-400 mt-20 p-6 bg-white rounded-xl shadow-sm border border-slate-100 max-w-lg mx-auto"><h2 class="text-xl font-bold text-slate-700 mb-2">Álbum Vazio</h2><p>Clique em <strong>Importar CSV</strong> para carregar sua planilha.</p></div>`;
+                progressPercent.textContent = '0%';
+                progressText.textContent = '0 de 0';
+                return;
+            }
+
             let totalFigurinhas = 0;
             let figurinhasObtidas = 0;
+            let selecoesRender = [...selecoes];
+            const modoOrdenacao = sortSelect.value;
 
-            selecoes.forEach(selecao => {
+            if (modoOrdenacao === 'album') {
+                selecoesRender.sort((a, b) => {
+                    let indexA = ordemDaFoto.indexOf(a.id);
+                    let indexB = ordemDaFoto.indexOf(b.id);
+                    if (indexA === -1) indexA = 999; 
+                    if (indexB === -1) indexB = 999;
+                    if (indexA !== indexB) return indexA - indexB;
+                    return a.leituraIndex - b.leituraIndex; 
+                });
+            } else if (modoOrdenacao === 'alfabetica') {
+                selecoesRender.sort((a, b) => a.nome.localeCompare(b.nome));
+            } else if (modoOrdenacao === 'preenchidas') {
+                selecoesRender.sort((a, b) => {
+                    const countA = contarPreenchidas(a);
+                    const countB = contarPreenchidas(b);
+                    if (countA === countB) return a.leituraIndex - b.leituraIndex; 
+                    return countB - countA; 
+                });
+            }
+
+            selecoesRender.forEach(selecao => {
                 const section = document.createElement('div');
                 section.className = 'mb-8';
                 
+                const qtdPreenchidas = contarPreenchidas(selecao);
+                const totalDestaSelecao = (selecao.end - selecao.start) + 1;
+                
+                const titleContainer = document.createElement('div');
+                titleContainer.className = 'flex justify-between items-center mb-3 ml-1 border-b border-slate-200 pb-1';
+                
                 const title = document.createElement('h2');
-                title.className = 'text-sm font-bold text-slate-400 uppercase tracking-widest mb-3 ml-1';
+                title.className = 'text-sm font-bold text-slate-400 uppercase tracking-widest';
                 title.textContent = selecao.nome;
-                section.appendChild(title);
+
+                const counter = document.createElement('span');
+                counter.className = 'text-xs font-semibold text-slate-400';
+                counter.textContent = `${qtdPreenchidas}/${totalDestaSelecao}`;
+                
+                titleContainer.appendChild(title);
+                titleContainer.appendChild(counter);
+                section.appendChild(titleContainer);
 
                 const grid = document.createElement('div');
                 grid.className = 'flex flex-wrap gap-2';
 
-                for (let i = 1; i <= selecao.total; i++) {
+                for (let i = selecao.start; i <= selecao.end; i++) {
                     totalFigurinhas++;
-                    const key = `${selecao.id}-${i}`;
+                    const key = `${selecao.originalId}-${i}`;
                     const status = figurinhasSalvas[key] || 0;
 
                     if (status > 0) figurinhasObtidas++;
@@ -181,10 +426,63 @@
                     
                     let baseClass = 'w-10 h-10 text-xs sm:text-sm font-semibold rounded-lg flex items-center justify-center transition-all duration-200 transform active:scale-95 no-context shadow-sm relative ';
                     
-                    if (status === 0) { // Faltando
+                    if (status === 0) { 
                         baseClass += 'bg-white text-slate-400 border border-slate-200 hover:border-indigo-300 hover:text-indigo-500';
-                    } else if (status === 1) { // Tenho
+                    } else if (status === 1) { 
                         baseClass += 'bg-indigo-500 text-white shadow-indigo-200/50 hover:bg-indigo-600';
-                    } else if (status === 2) { // Repetida
+                    } else if (status === 2) { 
                         baseClass += 'bg-amber-400 text-white shadow-amber-200/50 hover:bg-amber-500';
-                        btn.innerHTML = `${i} <span class="absolute -top-1 -right
+                        btn.innerHTML = `${i} <span class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white font-bold ring-2 ring-white">+1</span>`;
+                    }
+                    btn.className = baseClass;
+
+                    let isLongPress = false;
+                    let pressTimer;
+
+                    const startPress = (e) => {
+                        isLongPress = false;
+                        pressTimer = setTimeout(() => {
+                            isLongPress = true;
+                            if (navigator.vibrate) navigator.vibrate(50); 
+                            figurinhasSalvas[key] = (status === 2) ? 0 : 2; 
+                            salvarDados();
+                            renderizarAlbum();
+                        }, 500);
+                    };
+
+                    const cancelPress = () => clearTimeout(pressTimer);
+                    const endPress = (e) => {
+                        e.preventDefault(); 
+                        clearTimeout(pressTimer);
+                        if (!isLongPress) {
+                            if (status === 0) figurinhasSalvas[key] = 1; 
+                            else if (status === 1) figurinhasSalvas[key] = 0;
+                            else if (status === 2) figurinhasSalvas[key] = 1;
+                            salvarDados();
+                            renderizarAlbum();
+                        }
+                    };
+
+                    btn.addEventListener('mousedown', startPress);
+                    btn.addEventListener('touchstart', startPress, {passive: false});
+                    btn.addEventListener('mouseup', endPress);
+                    btn.addEventListener('touchend', endPress, {passive: false});
+                    btn.addEventListener('mouseleave', cancelPress);
+                    btn.addEventListener('touchmove', cancelPress, {passive: true});
+                    btn.addEventListener('contextmenu', e => e.preventDefault());
+
+                    grid.appendChild(btn);
+                }
+                section.appendChild(grid);
+                container.appendChild(section);
+            });
+
+            const percentual = totalFigurinhas === 0 ? 0 : Math.round((figurinhasObtidas / totalFigurinhas) * 100);
+            progressPercent.textContent = `${percentual}%`;
+            progressText.textContent = `${figurinhasObtidas} de ${totalFigurinhas} figurinhas`;
+        }
+
+        checkAuth();
+    </script>
+</body>
+</html>
