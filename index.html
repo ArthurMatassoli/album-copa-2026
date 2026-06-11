@@ -24,7 +24,7 @@
                 <p class="text-slate-500 text-sm" id="auth-subtitle">Crie sua conta para acessar o projeto.</p>
             </div>
 
-            <form id="auth-form" class="space-y-4">
+            <form id="auth-form" class="space-y-4" onsubmit="handleAuth(event)">
                 <div id="signup-fields-top" class="space-y-4">
                     <div>
                         <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Nome Completo</label>
@@ -112,8 +112,7 @@
                                 <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-indigo-500"></div> Tenho</div>
                                 <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-amber-400"></div> Repetida</div>
                             </div>
-                            <p id="user-email-display" class="text-xs text-center text-slate-400 mt-2 truncate font-bold"></p>
-                            <button onclick="logout()" class="mt-2 w-full text-xs text-red-500 font-bold border border-red-100 rounded py-1 hover:bg-red-50 transition">Sair da Conta</button>
+                            <button onclick="logout()" class="mt-4 w-full text-xs text-red-500 font-bold border border-red-100 rounded py-1 hover:bg-red-50 transition">Sair da Conta</button>
                         </div>
                     </div>
                 </div>
@@ -130,7 +129,8 @@
                 <button onclick="toggleAdminModal()" class="text-indigo-200 hover:text-white transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
             <div class="p-6 bg-slate-50 h-64 overflow-y-auto">
-                <p class="text-sm text-slate-500 mb-4">Lista de pessoas solicitando acesso ao seu projeto.</p>
+                <p class="text-sm text-slate-500 mb-4">Quando o banco for conectado, as pessoas que usarem o seu link aparecerão aqui.</p>
+                
                 <div class="bg-white border border-slate-200 rounded-lg p-3 flex justify-between items-center mb-3 shadow-sm">
                     <div>
                         <p class="font-bold text-sm text-slate-800">João Silva</p>
@@ -144,48 +144,164 @@
             </div>
         </div>
     </div>
-
+    
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "firebase/app";
-        // TODO: Add SDKs for Firebase products that you want to use
-        // https://firebase.google.com/docs/web/setup#available-libraries
-        
-        // Your web app's Firebase configuration
+        // --- ⚠️ COLOQUE SUA CHAVE WEB AQUI DENTRO DAS ASPAS ⚠️ ---
         const firebaseConfig = {
-          apiKey: "AIzaSyB9vc7dUgXZOmF5LIiPeGgbXwfvLztZAWI",
-          authDomain: "album-copa-2026-501f4.firebaseapp.com",
-          projectId: "album-copa-2026-501f4",
-          storageBucket: "album-copa-2026-501f4.firebasestorage.app",
-          messagingSenderId: "121031368831",
-          appId: "1:121031368831:web:79971041ab3a5c39559f4a"
+            apiKey: "AIzaSyB9vc7dUgXZOmF5LIiPeGgbXwfvLztZAWI",
+            authDomain: "album-copa-2026-501f4.firebaseapp.com",
+            projectId: "album-copa-2026-501f4",
+            storageBucket: "album-copa-2026-501f4.firebasestorage.app",
+            messagingSenderId: "121031368831",
+            appId: "1:121031368831:web:79971041ab3a5c39559f4a"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        const ALBUM_DOC_ID = "projeto_oficial";
-
-        // --- MAPA DE IMAGENS DAS BANDEIRAS ---
-        window.getBandeiraUrl = (code) => {
+        const ALBUM_DOC_ID = "projeto_oficial";	
+    <script>
+        // --- MAPA DE IMAGENS DAS BANDEIRAS (SIMULAÇÃO) ---
+        // Em um projeto real, você hospedaria essas imagens e o link seria: '/bandeiras/BRA.png'
+        const getBandeiraUrl = (code) => {
+            // Exemplos com imagens reais para você ver o resultado agora
             const exemplosReais = {
-                'FWC_1': 'https://upload.wikimedia.org/wikipedia/pt/2/23/Logotipo_da_Copa_do_Mundo_FIFA_de_2026.png',
-                'CC': 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Coca-Cola_logo.svg/200px-Coca-Cola_logo.svg.png',
+                'FWC_1': 'https://upload.wikimedia.org/wikipedia/pt/2/23/Logotipo_da_Copa_do_Mundo_FIFA_de_2026.png', // Logo da Copa
+                'CC': 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Coca-Cola_logo.svg/200px-Coca-Cola_logo.svg.png', // Logo Coca-Cola
                 'MEX': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Flag_of_Mexico.svg/200px-Flag_of_Mexico.svg.png',
                 'RSA': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Flag_of_South_Africa.svg/200px-Flag_of_South_Africa.svg.png',
                 'KOR': 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Flag_of_South_Korea.svg/200px-Flag_of_South_Korea.svg.png',
                 'CZE': 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Flag_of_the_Czech_Republic.svg/200px-Flag_of_the_Czech_Republic.svg.png',
-                'DEFAULT': `flags/${code}.png`
+                // PARA O RESTO DA LISTA: Simula como seria o link no seu site real
+                // Quando você hospedar, basta ter os arquivos CAN.png, BIH.png, etc., na pasta 'flags/'
+                'DEFAULT': `flags/${code}.png` 
             };
             return exemplosReais[code] || exemplosReais['DEFAULT'];
         };
 
+        // ------------------------- LÓGICA DE AUTENTICAÇÃO MOCK -------------------------
+        let isSignup = true;
+        
+        document.getElementById('auth-form').addEventListener('submit', handleAuth);
+
+        function toggleAuthMode() {
+            isSignup = !isSignup;
+            
+            document.getElementById('auth-error-msg').classList.add('hidden');
+            
+            document.getElementById('signup-fields-top').style.display = isSignup ? 'block' : 'none';
+            document.getElementById('confirm-password-container').style.display = isSignup ? 'block' : 'none';
+            document.getElementById('forgot-password-btn').style.display = isSignup ? 'none' : 'block';
+            
+            document.getElementById('auth-submit-btn').textContent = isSignup ? 'Cadastrar e Solicitar Acesso' : 'Entrar no Projeto';
+            document.getElementById('auth-subtitle').textContent = isSignup ? 'Crie sua conta para acessar o projeto.' : 'Bem-vindo de volta!';
+            document.getElementById('auth-toggle-text').textContent = isSignup ? 'Já tem uma conta?' : 'Ainda não tem conta?';
+            document.getElementById('auth-toggle-btn').textContent = isSignup ? 'Fazer Login' : 'Cadastrar';
+            
+            document.getElementById('auth-name').required = isSignup;
+            document.getElementById('auth-phone').required = isSignup;
+            document.getElementById('auth-confirm-password').required = isSignup;
+        }
+
+        function handleAuth(e) {
+            e.preventDefault(); 
+            
+            const errorMsg = document.getElementById('auth-error-msg');
+            errorMsg.classList.add('hidden'); 
+
+            const email = document.getElementById('auth-email').value;
+            const pass = document.getElementById('auth-password').value;
+            
+            if (isSignup) {
+                const confPass = document.getElementById('auth-confirm-password').value;
+                if (pass !== confPass) {
+                    errorMsg.textContent = "Atenção: As senhas digitadas não coincidem.";
+                    errorMsg.classList.remove('hidden');
+                    return; 
+                }
+            }
+
+            localStorage.setItem('currentUser', email);
+            checkAuth();
+        }
+
+        function recuperarSenha() {
+            const email = document.getElementById('auth-email').value;
+            const errorMsg = document.getElementById('auth-error-msg');
+            
+            if (!email) {
+                errorMsg.textContent = "Preencha seu E-mail acima para receber o link de recuperação.";
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+            alert(`Um e-mail de redefinição de senha foi enviado para: ${email}`);
+        }
+
+        function checkAuth() {
+            const user = localStorage.getItem('currentUser');
+            if (user) {
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('app-screen').style.display = 'block';
+                renderizarAlbum(); 
+            } else {
+                document.getElementById('app-screen').style.display = 'none';
+                document.getElementById('auth-screen').style.display = 'flex';
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('currentUser');
+            checkAuth();
+            if(!isSignup) toggleAuthMode(); 
+            document.getElementById('auth-password').value = '';
+            document.getElementById('auth-confirm-password').value = '';
+            document.getElementById('auth-error-msg').classList.add('hidden');
+        }
+
+        function toggleAdminModal() {
+            document.getElementById('admin-modal').classList.toggle('hidden');
+        }
+
+        // ------------------------- LÓGICA DE COMPARTILHAMENTO WHATSAPP -------------------------
+        function compartilharWhatsApp() {
+            if (selecoes.length === 0) {
+                alert("Seu álbum está vazio! Importe o CSV primeiro.");
+                return;
+            }
+
+            let text = "⚽ Olá! Estou completando meu Álbum da Copa 2026. Alguém tem essas figurinhas para trocar?\n\n*FALTAM:*\n";
+            let faltamTotal = 0;
+
+            selecoes.forEach(selecao => {
+                let missing = [];
+                for (let i = selecao.start; i <= selecao.end; i++) {
+                    const key = `${selecao.originalId}-${i}`;
+                    if (!figurinhasSalvas[key] || figurinhasSalvas[key] === 0) {
+                        missing.push(i);
+                        faltamTotal++;
+                    }
+                }
+                if (missing.length > 0) {
+                    // O WhatsApp não aceita exibir a imagem da bandeira direto pelo link de texto.
+                    // Portanto, mantenho a formatação limpa organizando por seleção.
+                    text += `*${selecao.nome}*: ${missing.join(', ')}\n`;
+                }
+            });
+
+            if (faltamTotal === 0) {
+                alert("Parabéns! O seu álbum está 100% completo!");
+                return;
+            }
+
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+        }
+
+        // ------------------------- LÓGICA ORIGINAL DO ÁLBUM -------------------------
         const ordemDaFoto = [
             'FWC_1', 'MEX', 'RSA', 'KOR', 'CZE', 'CAN', 'BIH', 'QAT', 'SUI',
             'BRA', 'MAR', 'HAI', 'SCO', 'USA', 'PAR', 'AUS', 'TUR',
@@ -196,126 +312,21 @@
             'FWC_2', 'CC'
         ];
 
-        let selecoes = [];
-        let figurinhasSalvas = {};
-        window.isSignup = true;
+        let selecoes = JSON.parse(localStorage.getItem('albumSelecoes_v9')) || [];
+        let figurinhasSalvas = JSON.parse(localStorage.getItem('albumCopa2026_v9')) || {};
 
-        // Monitorador de Estado de Autenticação
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                document.getElementById('auth-screen').style.display = 'none';
-                document.getElementById('app-screen').style.display = 'flex';
-                document.getElementById('user-email-display').textContent = user.email;
-                ouvirAlteracoesDoBanco();
-            } else {
-                document.getElementById('app-screen').style.display = 'none';
-                document.getElementById('auth-screen').style.display = 'flex';
-                document.getElementById('auth-password').value = '';
-                document.getElementById('auth-confirm-password').value = '';
-            }
-        });
+        const container = document.getElementById('album-container');
+        const progressPercent = document.getElementById('progress-percent');
+        const progressText = document.getElementById('progress-text');
+        const sortSelect = document.getElementById('sort-select');
 
-        // Controle de Tela Login/Cadastro
-        window.toggleAuthMode = () => {
-            window.isSignup = !window.isSignup;
-            document.getElementById('auth-error-msg').classList.add('hidden');
-            
-            document.getElementById('signup-fields-top').style.display = window.isSignup ? 'block' : 'none';
-            document.getElementById('confirm-password-container').style.display = window.isSignup ? 'block' : 'none';
-            document.getElementById('forgot-password-btn').style.display = window.isSignup ? 'none' : 'block';
-            
-            document.getElementById('auth-submit-btn').textContent = window.isSignup ? 'Cadastrar e Solicitar Acesso' : 'Entrar no Projeto';
-            document.getElementById('auth-subtitle').textContent = window.isSignup ? 'Crie sua conta para acessar o projeto.' : 'Bem-vindo de volta!';
-            document.getElementById('auth-toggle-text').textContent = window.isSignup ? 'Já tem uma conta?' : 'Ainda não tem conta?';
-            document.getElementById('auth-toggle-btn').textContent = window.isSignup ? 'Fazer Login' : 'Cadastrar';
-            
-            document.getElementById('auth-name').required = window.isSignup;
-            document.getElementById('auth-phone').required = window.isSignup;
-            document.getElementById('auth-confirm-password').required = window.isSignup;
-        };
+        sortSelect.addEventListener('change', renderizarAlbum);
 
-        // Envio do formulário blindado
-        document.getElementById('auth-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const errorMsg = document.getElementById('auth-error-msg');
-            errorMsg.classList.add('hidden');
-            
-            const email = document.getElementById('auth-email').value;
-            const pass = document.getElementById('auth-password').value;
-
-            try {
-                if (window.isSignup) {
-                    const confPass = document.getElementById('auth-confirm-password').value;
-                    if (pass !== confPass) throw new Error("As senhas não coincidem.");
-                    await createUserWithEmailAndPassword(auth, email, pass);
-                } else {
-                    await signInWithEmailAndPassword(auth, email, pass);
-                }
-            } catch (error) {
-                let msg = "Ocorreu um erro.";
-                if (error.code === 'auth/email-already-in-use') msg = "E-mail já cadastrado.";
-                else if (error.code === 'auth/invalid-credential') msg = "E-mail ou senha incorretos.";
-                else if (error.message.includes("not found") || error.message.includes("wrong-password")) msg = "Credenciais inválidas.";
-                else if (error.message.includes("coincidem")) msg = "As senhas digitadas não coincidem.";
-                
-                errorMsg.textContent = msg;
-                errorMsg.classList.remove('hidden');
-            }
-        });
-
-        // Recuperação de senha
-        window.recuperarSenha = () => {
-            const email = document.getElementById('auth-email').value;
-            const errorMsg = document.getElementById('auth-error-msg');
-            if (!email) {
-                errorMsg.textContent = "Preencha seu E-mail acima para recuperar a senha.";
-                errorMsg.classList.remove('hidden');
-                return;
-            }
-            sendPasswordResetEmail(auth, email).then(() => {
-                alert("Link de redefinição enviado com sucesso para: " + email);
-            }).catch(err => {
-                errorMsg.textContent = "Erro: " + err.message;
-                errorMsg.classList.remove('hidden');
-            });
-        };
-
-        window.logout = () => {
-            signOut(auth);
-            if(!window.isSignup) window.toggleAuthMode();
-        };
-
-        window.toggleAdminModal = () => document.getElementById('admin-modal').classList.toggle('hidden');
-
-        // Banco em tempo real
-        function ouvirAlteracoesDoBanco() {
-            onSnapshot(doc(db, "albums", ALBUM_DOC_ID), (docSnap) => {
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    selecoes = data.selecoes || [];
-                    figurinhasSalvas = data.figurinhasSalvas || {};
-                    renderizarAlbum();
-                } else {
-                    selecoes = [];
-                    figurinhasSalvas = {};
-                    renderizarAlbum();
-                }
-            });
-        }
-
-        async function salvarDadosNoBanco() {
-            await setDoc(doc(db, "albums", ALBUM_DOC_ID), {
-                selecoes: selecoes,
-                figurinhasSalvas: figurinhasSalvas
-            });
-        }
-
-        // Importação de CSV
         document.getElementById('csv-upload').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(evt) { processarCSV(evt.target.result); };
+            reader.onload = function(event) { processarCSV(event.target.result); };
             reader.readAsText(file);
         });
 
@@ -360,11 +371,17 @@
             if (newSelecoes.length > 0) {
                 selecoes = newSelecoes;
                 figurinhasSalvas = newState;
-                salvarDadosNoBanco();
-                alert(`Sucesso! Planilha lida e estruturada na nuvem.`);
+                salvarDados();
+                renderizarAlbum();
+                alert(`Sucesso! Planilha lida e estruturada.`);
             } else {
                 alert('Não foi possível ler as figurinhas. Verifique a planilha.');
             }
+        }
+
+        function salvarDados() {
+            localStorage.setItem('albumSelecoes_v9', JSON.stringify(selecoes));
+            localStorage.setItem('albumCopa2026_v9', JSON.stringify(figurinhasSalvas));
         }
 
         function contarPreenchidas(selecao) {
@@ -375,23 +392,20 @@
             return count;
         }
 
-        document.getElementById('sort-select').addEventListener('change', renderizarAlbum);
-
         function renderizarAlbum() {
-            const container = document.getElementById('album-container');
             container.innerHTML = '';
             
             if (selecoes.length === 0) {
-                container.innerHTML = `<div class="text-center text-slate-400 mt-20 p-6 bg-white rounded-xl shadow-sm border border-slate-100 max-w-lg mx-auto"><h2 class="text-xl font-bold text-slate-700 mb-2">Álbum Vazio</h2><p>Clique em <strong>Importar CSV</strong> para carregar os dados no banco.</p></div>`;
-                document.getElementById('progress-percent').textContent = '0%';
-                document.getElementById('progress-text').textContent = '0 de 0';
+                container.innerHTML = `<div class="text-center text-slate-400 mt-20 p-6 bg-white rounded-xl shadow-sm border border-slate-100 max-w-lg mx-auto"><h2 class="text-xl font-bold text-slate-700 mb-2">Álbum Vazio</h2><p>Clique em <strong>Importar CSV</strong> para carregar sua planilha.</p></div>`;
+                progressPercent.textContent = '0%';
+                progressText.textContent = '0 de 0';
                 return;
             }
 
             let totalFigurinhas = 0;
             let figurinhasObtidas = 0;
             let selecoesRender = [...selecoes];
-            const modoOrdenacao = document.getElementById('sort-select').value;
+            const modoOrdenacao = sortSelect.value;
 
             if (modoOrdenacao === 'album') {
                 selecoesRender.sort((a, b) => {
@@ -426,11 +440,13 @@
                 const title = document.createElement('h2');
                 title.className = 'text-sm font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2';
                 
+                // --- ADICIONANDO A IMAGEM DA BANDEIRA ---
                 const imgFlag = document.createElement('img');
-                imgFlag.src = window.getBandeiraUrl(selecao.id);
+                imgFlag.src = getBandeiraUrl(selecao.id); // Pega o endereço da imagem
                 imgFlag.alt = selecao.nome;
-                imgFlag.className = 'w-5 h-3.5 object-cover rounded shadow-sm';
-                imgFlag.onerror = () => imgFlag.style.display = 'none';
+                imgFlag.className = 'w-5 h-3.5 object-cover rounded shadow-sm'; // Define o tamanho pequeno e bonitinho
+                // Se a imagem falhar (porque ainda não hospedamos todas), ela simplesmente não aparece
+                imgFlag.onerror = () => imgFlag.style.display = 'none'; 
                 
                 const spanName = document.createElement('span');
                 spanName.textContent = selecao.nome;
@@ -479,20 +495,22 @@
                         pressTimer = setTimeout(() => {
                             isLongPress = true;
                             if (navigator.vibrate) navigator.vibrate(50); 
-                            figurinhasSalvas[key] = (status === 2) ? 0 : 2;
-                            salvarDadosNoBanco();
+                            figurinhasSalvas[key] = (status === 2) ? 0 : 2; 
+                            salvarDados();
+                            renderizarAlbum();
                         }, 500);
                     };
 
                     const cancelPress = () => clearTimeout(pressTimer);
                     const endPress = (e) => {
-                        e.preventDefault();
+                        e.preventDefault(); 
                         clearTimeout(pressTimer);
                         if (!isLongPress) {
                             if (status === 0) figurinhasSalvas[key] = 1; 
                             else if (status === 1) figurinhasSalvas[key] = 0;
                             else if (status === 2) figurinhasSalvas[key] = 1;
-                            salvarDadosNoBanco();
+                            salvarDados();
+                            renderizarAlbum();
                         }
                     };
 
@@ -511,29 +529,11 @@
             });
 
             const percentual = totalFigurinhas === 0 ? 0 : Math.round((figurinhasObtidas / totalFigurinhas) * 100);
-            document.getElementById('progress-percent').textContent = `${percentual}%`;
-            document.getElementById('progress-text').textContent = `${figurinhasObtidas} de ${totalFigurinhas} figurinhas`;
+            progressPercent.textContent = `${percentual}%`;
+            progressText.textContent = `${figurinhasObtidas} de ${totalFigurinhas} figurinhas`;
         }
 
-        // WhatsApp
-        window.compartilharWhatsApp = () => {
-            if (selecoes.length === 0) return alert("Álbum vazio!");
-            let text = "⚽ Olá! Estou completando meu Álbum da Copa 2026. Alguém tem essas para trocar?\n\n*FALTAM:*\n";
-            let faltamTotal = 0;
-            selecoes.forEach(selecao => {
-                let missing = [];
-                for (let i = selecao.start; i <= selecao.end; i++) {
-                    const key = `${selecao.originalId}-${i}`;
-                    if (!figurinhasSalvas[key] || figurinhasSalvas[key] === 0) {
-                        missing.push(i);
-                        faltamTotal++;
-                    }
-                }
-                if (missing.length > 0) text += `*${selecao.nome}*: ${missing.join(', ')}\n`;
-            });
-            if (faltamTotal === 0) return alert("Álbum 100% completo!");
-            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-        };
+        checkAuth();
     </script>
 </body>
 </html>
