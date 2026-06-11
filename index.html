@@ -20,7 +20,7 @@
     <div id="auth-screen" class="flex-1 items-center justify-center p-4 fade-in overflow-y-auto py-10" style="display: flex;">
         <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-100 my-auto">
             <div class="text-center mb-6">
-                <h1 class="text-3xl font-extrabold text-indigo-900 tracking-tight mb-2">Copa do Mundo 2026</h1>
+                <h1 class="text-3xl font-extrabold text-indigo-900 tracking-tight mb-2">Álbum 2026</h1>
                 <p class="text-slate-500 text-sm" id="auth-subtitle">Faça login ou cadastre-se para acessar.</p>
             </div>
 
@@ -113,12 +113,6 @@
                         <option value="repetidas">Só Repetidas</option>
                     </select>
 
-                    <button type="button" onclick="document.getElementById('csv-upload').click()" class="cursor-pointer text-indigo-600 hover:bg-indigo-50 text-sm font-semibold transition flex items-center bg-white border border-slate-200 py-1.5 px-3 rounded-md shadow-sm">
-                        <span class="hidden sm:inline">Importar CSV</span>
-                        <svg class="w-4 h-4 sm:ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                    </button>
-                    <input type="file" id="csv-upload" accept=".csv" style="display: none;">
-
                     <button onclick="gerarLinkConvite()" class="text-blue-600 hover:bg-blue-50 border border-blue-200 text-sm font-semibold transition flex items-center bg-white py-1.5 px-3 rounded-md shadow-sm">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
                         <span class="hidden md:inline">Convidar</span>
@@ -176,7 +170,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, collection, addDoc, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, collection, addDoc, serverTimestamp, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyB9vc7dUgXZOmF5LIiPeGgbXwfvLztZAWI", 
@@ -309,8 +303,8 @@
             document.getElementById('auth-submit-btn').textContent = window.isSignup ? 'Cadastrar e Entrar' : 'Entrar';
             document.getElementById('auth-toggle-text').textContent = window.isSignup ? 'Já tem uma conta?' : 'Ainda não tem conta?';
             document.getElementById('auth-toggle-btn').textContent = window.isSignup ? 'Fazer Login' : 'Cadastrar';
-            document.getElementById('auth-name').required = window.isSignup;
-            document.getElementById('auth-confirm-password').required = window.isSignup;
+            if (document.getElementById('auth-name')) document.getElementById('auth-name').required = window.isSignup;
+            if (document.getElementById('auth-confirm-password')) document.getElementById('auth-confirm-password').required = window.isSignup;
         };
 
         document.getElementById('auth-form').addEventListener('submit', async (e) => {
@@ -370,18 +364,25 @@
                     const data = docSnap.data();
                     const souDono = data.owner === myEmail;
                     const souConvidado = data.guests && data.guests.includes(myEmail);
+                    const removidoPorMim = data.removedBy && data.removedBy.includes(myEmail);
 
-                    if (souDono || souConvidado) {
+                    // Só mostra se for participante E não tiver clicado para ocultar da conta
+                    if ((souDono || souConvidado) && !removidoPorMim) {
                         encontrou = true;
                         const roleTag = souDono ? '<span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold">Dono</span>' : '<span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded font-bold">Convidado</span>';
                         
                         list.innerHTML += `
-                            <div onclick="abrirProjeto('${docSnap.id}', '${data.nomeProjeto}')" class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg cursor-pointer transition transform hover:-translate-y-1">
-                                <div class="flex justify-between items-start mb-3">
-                                    <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center">
+                            <div onclick="abrirProjeto('${docSnap.id}', '${data.nomeProjeto}')" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg cursor-pointer transition transform hover:-translate-y-1 relative">
+                                <div class="flex items-start gap-3 mb-3">
+                                    <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center shrink-0">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477-4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
                                     </div>
-                                    ${roleTag}
+                                    <div class="flex-1 pt-1">
+                                        ${roleTag}
+                                    </div>
+                                    <button onclick="removerProjeto(event, '${docSnap.id}', '${data.nomeProjeto}')" class="text-slate-300 hover:text-red-500 p-1 transition rounded-full hover:bg-red-50" title="Remover da conta">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    </button>
                                 </div>
                                 <h3 class="font-extrabold text-lg text-slate-800 truncate">${data.nomeProjeto}</h3>
                                 <p class="text-xs font-semibold text-slate-400 mt-1">${(data.guests ? data.guests.length : 0) + 1} Participante(s)</p>
@@ -391,7 +392,7 @@
                 });
 
                 if(!encontrou) {
-                    list.innerHTML = `<div class="col-span-full text-center py-10"><p class="text-slate-400">Nenhum álbum encontrado. Crie o seu primeiro projeto!</p></div>`;
+                    list.innerHTML = `<div class="col-span-full text-center py-10"><p class="text-slate-400">Nenhum álbum encontrado. Crie o seu primeiro projeto ou entre através de um convite!</p></div>`;
                 }
             });
         }
@@ -420,6 +421,21 @@
             } catch (e) { alert("Erro: " + e.message); }
         };
 
+        window.removerProjeto = async (event, projectId, projectName) => {
+            event.stopPropagation(); // Impede de abrir o projeto ao clicar na lixeira
+            const confirmar = confirm(`Tem certeza que deseja remover "${projectName}" da sua tela?\n\nIsso NÃO apaga o projeto. Para voltar a vê-lo, você precisará clicar no link de convite novamente.`);
+            if (!confirmar) return;
+
+            try {
+                const ref = doc(db, "projetos_album", projectId);
+                await updateDoc(ref, {
+                    removedBy: arrayUnion(auth.currentUser.email)
+                });
+            } catch(e) {
+                alert("Erro ao remover o projeto: " + e.message);
+            }
+        };
+
         async function tentarEntrarNoProjeto(id) {
             const ref = doc(db, "projetos_album", id);
             const snap = await getDoc(ref);
@@ -433,6 +449,15 @@
 
             const data = snap.data();
             const myEmail = auth.currentUser.email;
+            const isRemoved = data.removedBy && data.removedBy.includes(myEmail);
+
+            // Se o usuário ocultou o projeto antes, o convite apenas restaura a visibilidade
+            if (isRemoved) {
+                await updateDoc(ref, { removedBy: arrayRemove(myEmail) });
+                alert("Álbum restaurado na sua conta com sucesso!");
+                abrirProjeto(id, data.nomeProjeto);
+                return;
+            }
 
             if (data.owner === myEmail || (data.guests && data.guests.includes(myEmail))) {
                 abrirProjeto(id, data.nomeProjeto);
@@ -495,46 +520,6 @@
             await updateDoc(doc(db, "projetos_album", window.currentProjectId), {
                 figurinhasSalvas: figurinhasSalvas
             });
-        }
-
-        document.getElementById('csv-upload').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(evt) { 
-                processarCSV(evt.target.result); 
-                e.target.value = ''; 
-            };
-            reader.readAsText(file);
-        });
-
-        function processarCSV(csvText) {
-            const lines = csvText.replace(/\r/g, '').split('\n');
-            let newState = {};
-            
-            for (let i = 0; i < lines.length; i++) {
-                const line = lines[i].trim();
-                if (!line) continue;
-                const cols = line.split(',');
-                const selecaoId = cols[1] ? cols[1].trim() : ''; 
-                if (!selecaoId || ['seleções', 'total'].includes(selecaoId.toLowerCase())) continue;
-
-                if (selecaoId === 'FWC') {
-                    for (let j = 1; j <= 19; j++) {
-                        if (['true', 'verdadeiro', '1'].includes(cols[j + 1] ? cols[j + 1].trim().toLowerCase() : '')) newState[`FWC-${j}`] = 1; 
-                    }
-                } else {
-                    for (let j = 1; j <= 50; j++) {
-                        if (cols[j + 1] !== undefined && cols[j + 1].trim() !== '') {
-                            if (['true', 'verdadeiro', '1'].includes(cols[j + 1].trim().toLowerCase())) newState[`${selecaoId}-${j}`] = 1; 
-                        }
-                    }
-                }
-            }
-            
-            figurinhasSalvas = newState;
-            salvarDadosNoBanco();
-            alert(`Sucesso! Planilha processada e álbum atualizado.`);
         }
 
         function contarPreenchidas(selecao) {
@@ -716,7 +701,6 @@
             }
         };
 
-        // MENSAGEM NO WHATSAPP LIMPA (SEM EMOJIS)
         window.compartilharWhatsApp = () => {
             if (selecoes.length === 0) return alert("Álbum vazio!");
             
