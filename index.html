@@ -144,15 +144,54 @@
             </div>
         </div>
     </div>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
+        // --- ⚠️ COLOQUE SUA CHAVE WEB AQUI DENTRO DAS ASPAS ⚠️ ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyB9vc7dUgXZOmF5LIiPeGgbXwfvLztZAWI",
+            authDomain: "album-copa-2026-501f4.firebaseapp.com",
+            projectId: "album-copa-2026-501f4",
+            storageBucket: "album-copa-2026-501f4.firebasestorage.app",
+            messagingSenderId: "121031368831",
+            appId: "1:121031368831:web:79971041ab3a5c39559f4a"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const ALBUM_DOC_ID = "projeto_oficial";	
     <script>
+        // --- MAPA DE IMAGENS DAS BANDEIRAS (SIMULAÇÃO) ---
+        // Em um projeto real, você hospedaria essas imagens e o link seria: '/bandeiras/BRA.png'
+        const getBandeiraUrl = (code) => {
+            // Exemplos com imagens reais para você ver o resultado agora
+            const exemplosReais = {
+                'FWC_1': 'https://upload.wikimedia.org/wikipedia/pt/2/23/Logotipo_da_Copa_do_Mundo_FIFA_de_2026.png', // Logo da Copa
+                'CC': 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Coca-Cola_logo.svg/200px-Coca-Cola_logo.svg.png', // Logo Coca-Cola
+                'MEX': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Flag_of_Mexico.svg/200px-Flag_of_Mexico.svg.png',
+                'RSA': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Flag_of_South_Africa.svg/200px-Flag_of_South_Africa.svg.png',
+                'KOR': 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Flag_of_South_Korea.svg/200px-Flag_of_South_Korea.svg.png',
+                'CZE': 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Flag_of_the_Czech_Republic.svg/200px-Flag_of_the_Czech_Republic.svg.png',
+                // PARA O RESTO DA LISTA: Simula como seria o link no seu site real
+                // Quando você hospedar, basta ter os arquivos CAN.png, BIH.png, etc., na pasta 'flags/'
+                'DEFAULT': `flags/${code}.png` 
+            };
+            return exemplosReais[code] || exemplosReais['DEFAULT'];
+        };
+
         // ------------------------- LÓGICA DE AUTENTICAÇÃO MOCK -------------------------
         let isSignup = true;
         
+        document.getElementById('auth-form').addEventListener('submit', handleAuth);
+
         function toggleAuthMode() {
             isSignup = !isSignup;
             
-            // Ocultar a mensagem de erro sempre que trocar de tela
             document.getElementById('auth-error-msg').classList.add('hidden');
             
             document.getElementById('signup-fields-top').style.display = isSignup ? 'block' : 'none';
@@ -170,10 +209,10 @@
         }
 
         function handleAuth(e) {
-            e.preventDefault(); // Bloqueia o recarregamento da página IMEDIATAMENTE
+            e.preventDefault(); 
             
             const errorMsg = document.getElementById('auth-error-msg');
-            errorMsg.classList.add('hidden'); // Limpa erros antigos
+            errorMsg.classList.add('hidden'); 
 
             const email = document.getElementById('auth-email').value;
             const pass = document.getElementById('auth-password').value;
@@ -181,14 +220,12 @@
             if (isSignup) {
                 const confPass = document.getElementById('auth-confirm-password').value;
                 if (pass !== confPass) {
-                    // Exibe a mensagem de erro na tela de forma visual e encerra a função
                     errorMsg.textContent = "Atenção: As senhas digitadas não coincidem.";
                     errorMsg.classList.remove('hidden');
                     return; 
                 }
             }
 
-            // Se as senhas baterem ou for Login, prossegue:
             localStorage.setItem('currentUser', email);
             checkAuth();
         }
@@ -220,8 +257,7 @@
         function logout() {
             localStorage.removeItem('currentUser');
             checkAuth();
-            if(!isSignup) toggleAuthMode(); // Volta para tela de cadastro ao deslogar
-            // Limpa os campos
+            if(!isSignup) toggleAuthMode(); 
             document.getElementById('auth-password').value = '';
             document.getElementById('auth-confirm-password').value = '';
             document.getElementById('auth-error-msg').classList.add('hidden');
@@ -251,6 +287,8 @@
                     }
                 }
                 if (missing.length > 0) {
+                    // O WhatsApp não aceita exibir a imagem da bandeira direto pelo link de texto.
+                    // Portanto, mantenho a formatação limpa organizando por seleção.
                     text += `*${selecao.nome}*: ${missing.join(', ')}\n`;
                 }
             });
@@ -400,8 +438,21 @@
                 titleContainer.className = 'flex justify-between items-center mb-3 ml-1 border-b border-slate-200 pb-1';
                 
                 const title = document.createElement('h2');
-                title.className = 'text-sm font-bold text-slate-400 uppercase tracking-widest';
-                title.textContent = selecao.nome;
+                title.className = 'text-sm font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2';
+                
+                // --- ADICIONANDO A IMAGEM DA BANDEIRA ---
+                const imgFlag = document.createElement('img');
+                imgFlag.src = getBandeiraUrl(selecao.id); // Pega o endereço da imagem
+                imgFlag.alt = selecao.nome;
+                imgFlag.className = 'w-5 h-3.5 object-cover rounded shadow-sm'; // Define o tamanho pequeno e bonitinho
+                // Se a imagem falhar (porque ainda não hospedamos todas), ela simplesmente não aparece
+                imgFlag.onerror = () => imgFlag.style.display = 'none'; 
+                
+                const spanName = document.createElement('span');
+                spanName.textContent = selecao.nome;
+
+                title.appendChild(imgFlag);
+                title.appendChild(spanName);
 
                 const counter = document.createElement('span');
                 counter.className = 'text-xs font-semibold text-slate-400';
