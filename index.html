@@ -20,7 +20,7 @@
     <div id="auth-screen" class="flex-1 items-center justify-center p-4 fade-in overflow-y-auto py-10" style="display: flex;">
         <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-100 my-auto">
             <div class="text-center mb-6">
-                <h1 class="text-3xl font-extrabold text-indigo-900 tracking-tight mb-2">Álbum 2026</h1>
+                <h1 class="text-3xl font-extrabold text-indigo-900 tracking-tight mb-2">Copa do Mundo 2026</h1>
                 <p class="text-slate-500 text-sm" id="auth-subtitle">Faça login ou cadastre-se para acessar.</p>
             </div>
 
@@ -40,15 +40,9 @@
             </div>
 
             <form id="auth-form" class="space-y-4">
-                <div id="signup-fields-top" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Nome Completo</label>
-                        <input type="text" id="auth-name" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500 transition" required>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Celular (WhatsApp)</label>
-                        <input type="tel" id="auth-phone" placeholder="(XX) XXXXX-XXXX" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500 transition" required>
-                    </div>
+                <div id="signup-fields-top">
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Nome Completo</label>
+                    <input type="text" id="auth-name" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500 transition" required>
                 </div>
 
                 <div>
@@ -59,7 +53,7 @@
                 <div>
                     <div class="flex justify-between items-end mb-1">
                         <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Senha</label>
-                        <button type="button" onclick="recuperarSenha()" class="text-xs font-bold text-indigo-600 hover:underline focus:outline-none">Esqueci a senha</button>
+                        <button type="button" id="forgot-password-btn" onclick="recuperarSenha()" class="text-xs font-bold text-indigo-600 hover:underline focus:outline-none" style="display: none;">Esqueci a senha</button>
                     </div>
                     <input type="password" id="auth-password" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500 transition">
                 </div>
@@ -209,23 +203,6 @@
         const urlParams = new URLSearchParams(window.location.search);
         let pendingJoinId = urlParams.get('join');
 
-        // MAPA DE BANDEIRAS BLINDADO (Codificado em Unicode para não quebrar nunca mais)
-        window.emojiMap = {
-            'FWC': '\u{1F3C6}', 'MEX': '\u{1F1F2}\u{1F1FD}', 'RSA': '\u{1F1FF}\u{1F1E6}', 'KOR': '\u{1F1F0}\u{1F1F7}',
-            'CZE': '\u{1F1E8}\u{1F1FF}', 'CAN': '\u{1F1E8}\u{1F1E6}', 'BIH': '\u{1F1E7}\u{1F1E6}', 'QAT': '\u{1F1F6}\u{1F1E6}',
-            'SUI': '\u{1F1E8}\u{1F1ED}', 'BRA': '\u{1F1E7}\u{1F1F7}', 'MAR': '\u{1F1F2}\u{1F1E6}', 'HAI': '\u{1F1ED}\u{1F1F9}',
-            'SCO': '\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}', 'USA': '\u{1F1FA}\u{1F1F8}', 'PAR': '\u{1F1F5}\u{1F1FE}',
-            'AUS': '\u{1F1E6}\u{1F1FA}', 'TUR': '\u{1F1F9}\u{1F1F7}', 'GER': '\u{1F1E9}\u{1F1EA}', 'CUW': '\u{1F1E8}\u{1F1FC}',
-            'CIV': '\u{1F1E8}\u{1F1EE}', 'ECU': '\u{1F1EA}\u{1F1E8}', 'NED': '\u{1F1F3}\u{1F1F1}', 'JPN': '\u{1F1EF}\u{1F1F5}',
-            'SWE': '\u{1F1F8}\u{1F1EA}', 'TUN': '\u{1F1F9}\u{1F1F3}', 'BEL': '\u{1F1E7}\u{1F1EA}', 'EGY': '\u{1F1EA}\u{1F1EC}',
-            'IRN': '\u{1F1EE}\u{1F1F7}', 'NZL': '\u{1F1F3}\u{1F1FF}', 'ESP': '\u{1F1EA}\u{1F1F8}', 'CPV': '\u{1F1E8}\u{1F1FB}',
-            'KSA': '\u{1F1F8}\u{1F1E6}', 'URU': '\u{1F1FA}\u{1F1FE}', 'FRA': '\u{1F1EB}\u{1F1F7}', 'SEN': '\u{1F1F8}\u{1F1F3}',
-            'IRQ': '\u{1F1EE}\u{1F1F6}', 'NOR': '\u{1F1F3}\u{1F1F4}', 'ARG': '\u{1F1E6}\u{1F1F7}', 'ALG': '\u{1F1E9}\u{1F1FF}',
-            'AUT': '\u{1F1E6}\u{1F1F9}', 'JOR': '\u{1F1EF}\u{1F1F4}', 'POR': '\u{1F1F5}\u{1F1F9}', 'COD': '\u{1F1E8}\u{1F1E9}',
-            'UZB': '\u{1F1FA}\u{1F1FF}', 'COL': '\u{1F1E8}\u{1F1F4}', 'ENG': '\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}',
-            'CRO': '\u{1F1ED}\u{1F1F7}', 'GHA': '\u{1F1EC}\u{1F1ED}', 'PAN': '\u{1F1F5}\u{1F1E6}', 'CC': '\u{1F964}'
-        };
-
         window.getBandeiraUrl = (code) => {
             const flags = {
                 'FWC_1': 'https://upload.wikimedia.org/wikipedia/pt/2/23/Logotipo_da_Copa_do_Mundo_FIFA_de_2026.png',
@@ -289,7 +266,6 @@
                 if (!docSnap.exists()) {
                     await setDoc(userRef, {
                         nome: user.displayName || "Usuário",
-                        telefone: "",
                         email: user.email,
                         criadoEm: serverTimestamp()
                     });
@@ -334,7 +310,6 @@
             document.getElementById('auth-toggle-text').textContent = window.isSignup ? 'Já tem uma conta?' : 'Ainda não tem conta?';
             document.getElementById('auth-toggle-btn').textContent = window.isSignup ? 'Fazer Login' : 'Cadastrar';
             document.getElementById('auth-name').required = window.isSignup;
-            document.getElementById('auth-phone').required = window.isSignup;
             document.getElementById('auth-confirm-password').required = window.isSignup;
         };
 
@@ -351,7 +326,6 @@
                     const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
                     await setDoc(doc(db, "users", userCredential.user.uid), {
                         nome: document.getElementById('auth-name').value,
-                        telefone: document.getElementById('auth-phone').value,
                         email: email,
                         criadoEm: serverTimestamp()
                     });
@@ -616,7 +590,6 @@
                     imgFlag.onerror = () => imgFlag.style.display = 'none';
                     
                     const spanName = document.createElement('span');
-                    // NOME COM SIGLA
                     spanName.textContent = `${selecao.nome} (${selecao.originalId})`;
                     
                     title.appendChild(imgFlag);
@@ -743,7 +716,7 @@
             }
         };
 
-        // MENSAGEM NO WHATSAPP EXATAMENTE COMO SOLICITADO
+        // MENSAGEM NO WHATSAPP LIMPA (SEM EMOJIS)
         window.compartilharWhatsApp = () => {
             if (selecoes.length === 0) return alert("Álbum vazio!");
             
@@ -762,8 +735,7 @@
                     else if (status === 2) { repeated.push(i); repetidasTotal++; }
                 }
                 
-                const emoji = window.emojiMap[selecao.originalId] || '\u{26BD}';
-                const label = `${emoji} *${selecao.nome} (${selecao.originalId})*`;
+                const label = `*${selecao.nome} (${selecao.originalId})*`;
 
                 if (missing.length > 0) textFaltam += `${label}: ${missing.join(', ')}\n`;
                 if (repeated.length > 0) textRepetidas += `${label}: ${repeated.join(', ')}\n`;
