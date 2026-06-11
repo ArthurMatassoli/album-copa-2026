@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Álbum Copa 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans pb-10">
+
+    <header class="bg-blue-600 text-white p-4 shadow-md sticky top-0 z-10">
+        <div class="container mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            <h1 class="text-xl font-bold">Álbum Copa 2026</h1>
+            <div class="flex items-center gap-4">
+                <label class="cursor-pointer bg-white text-blue-600 px-3 py-1 text-sm font-semibold rounded shadow hover:bg-gray-100 transition">
+                    Importar CSV
+                    <input type="file" id="csv-upload" accept=".csv" class="hidden">
+                </label>
+                <div class="text-sm font-semibold bg-blue-800 px-3 py-1 rounded">
+                    Progresso: <span id="progress-text">0%</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto mt-6 px-4" id="album-container">
+        </main>
+
+    <script>
+        // Inicializa o estado a partir do LocalStorage ou define como vazio
+        let selecoes = JSON.parse(localStorage.getItem('albumSelecoes')) || [];
+        let figurinhasSalvas = JSON.parse(localStorage.getItem('albumCopa2026')) || {};
+
+        const container = document.getElementById('album-container');
+        const progressText = document.getElementById('progress-text');
+
+        // Lida com o upload e parse do arquivo CSV
+        document.getElementById('csv-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                processarCSV(event.target.result);
+            };
+            reader.readAsText(file);
+        });
+
+        function processarCSV(csvText) {
+            const lines = csvText.split('\n');
+            let newState = {};
+            let newSelecoes = [];
+
+            // Começa do índice 4 para pular as 3 linhas em branco e a linha de cabeçalho
+            for (let i = 4; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                
+                const cols = line.split(',');
+                const selecaoId = cols[1]; // Coluna B da planilha
+                
+                if (!selecaoId || selecaoId === 'Seleções') continue;
+
+                // Determina o máximo de figurinhas daquela seleção dinamicamente
+                let maxFigurinhas = 0;
+                for (let j = 1; j <= 20; j++) {
+                    const val = cols[j + 1];
+                    if (val !== undefined && val !== '') {
+                        maxFigurinhas = j;
+                    }
+                }
+
+                newSelecoes.push({ id: selecaoId, nome: selecaoId, total: maxFigurinhas });
+
+                // Mapeia o status (True/False)
+                for (let j = 1; j <= maxFigurinhas; j++) {
+                    const value = cols[j + 1] ? cols[j + 1].trim().toLowerCase() : '';
+                    if (value === 'true') {
+                        newState[`${selecaoId}-${j}`] = true;
+                    }
+                }
+            }
+
+            // Atualiza a memória e o cache local
+            selecoes = newSelecoes;
+            figurinhasSalvas = newState;
+            localStorage.setItem('albumSelecoes', JSON.stringify(selecoes));
+            localStorage.setItem('albumCopa2026', JSON.stringify(figurinhasSalvas));
+            
+            renderizarAlbum();
+            alert('Dados da planilha importados com sucesso!');
+        }
+
+        function renderizarAlbum() {
+            container.innerHTML = '';
+            let totalFigurinhas = 0;
+            let figurinhasObtidas = 0;
+
+            if (selecoes.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-500 mt-10">Nenhuma seleção encontrada. Faça o upload do seu arquivo CSV da planilha para começar.</div>';
+                return;
+            }
+
+            selecoes.forEach(selecao => {
+                const section = document.createElement('div');
+                section.className = 'bg-white rounded-lg shadow-md p-4 mb-6';
+                
+                const title = document.createElement('h2');
+                title.className = 'text-lg font-bold border-b pb-2 mb-4 text-blue-700';
+                // Como o CSV tem só as siglas, exibimos a sigla
+                title.textContent = selecao.nome;
+                section.appendChild(title);
+
+                const grid = document.createElement('div');
+                grid.className = 'grid grid-cols-5 gap-2 sm:grid-cols-10';
+
+                for (let i = 1; i <= selecao.total; i++) {
+                    totalFigurinhas++;
+                    const key = `${selecao.id}-${i}`;
+                    const hasSticker = figurinhasSalvas[key];
+
+                    if (hasSticker) figurinhasObtidas++;
+
+                    const btn = document.createElement('button');
+                    btn.textContent = i;
+                    btn.className = `w-full aspect-square flex items-center justify-center font-semibold rounded text-sm transition-colors duration-200 ${
+                        hasSticker ? 'bg-green-500 text-white shadow-inner' : 'bg-gray-200 text-gray-500 hover:bg-gray-300'
+                    }`;
+
+                    btn.onclick = () => toggleFigurinha(key);
+                    grid.appendChild(btn);
+                }
+
+                section.appendChild(grid);
+                container.appendChild(section);
+            });
+
+            // Lógica da barra de progresso
+            const percentual = totalFigurinhas === 0 ? 0 : Math.round((figurinhasObtidas / totalFigurinhas) * 100);
+            progressText.textContent = `${percentual}% (${figurinhasObtidas}/${totalFigurinhas})`;
+        }
+
+        function toggleFigurinha(key) {
+            figurinhasSalvas[key] = !figurinhasSalvas[key];
+            localStorage.setItem('albumCopa2026', JSON.stringify(figurinhasSalvas));
+            renderizarAlbum();
+        }
+
+        renderizarAlbum();
+    </script>
+</body>
+</html>
