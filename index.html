@@ -209,15 +209,21 @@
         const urlParams = new URLSearchParams(window.location.search);
         let pendingJoinId = urlParams.get('join');
 
-        // MAPA DE BANDEIRAS E EMOJIS
+        // MAPA DE BANDEIRAS BLINDADO (Codificado em Unicode para não quebrar nunca mais)
         window.emojiMap = {
-            'FWC': '🏆', 'MEX': '🇲🇽', 'RSA': '🇿🇦', 'KOR': '🇰🇷', 'CZE': '🇨🇿', 'CAN': '🇨🇦', 'BIH': '🇧🇦', 'QAT': '🇶🇦', 'SUI': '🇨🇭',
-            'BRA': '🇧🇷', 'MAR': '🇲🇦', 'HAI': '🇭🇹', 'SCO': '🏴󠁧󠁢󠁳󠁣󠁴󠁿', 'USA': '🇺🇸', 'PAR': '🇵🇾', 'AUS': '🇦🇺', 'TUR': '🇹🇷',
-            'GER': '🇩🇪', 'CUW': '🇨🇼', 'CIV': '🇨🇮', 'ECU': '🇪🇨', 'NED': '🇳🇱', 'JPN': '🇯🇵', 'SWE': '🇸🇪', 'TUN': '🇹🇳',
-            'BEL': '🇧🇪', 'EGY': '🇪🇬', 'IRN': '🇮🇷', 'NZL': '🇳🇿', 'ESP': '🇪🇸', 'CPV': '🇨🇻', 'KSA': '🇸🇦', 'URU': '🇺🇾',
-            'FRA': '🇫🇷', 'SEN': '🇸🇳', 'IRQ': '🇮🇶', 'NOR': '🇳🇴', 'ARG': '🇦🇷', 'ALG': '🇩🇿', 'AUT': '🇦🇹', 'JOR': '🇯🇴',
-            'POR': '🇵🇹', 'COD': '🇨🇩', 'UZB': '🇺🇿', 'COL': '🇨🇴', 'ENG': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'CRO': '🇭🇷', 'GHA': '🇬🇭', 'PAN': '🇵🇦',
-            'CC': '🥤'
+            'FWC': '\u{1F3C6}', 'MEX': '\u{1F1F2}\u{1F1FD}', 'RSA': '\u{1F1FF}\u{1F1E6}', 'KOR': '\u{1F1F0}\u{1F1F7}',
+            'CZE': '\u{1F1E8}\u{1F1FF}', 'CAN': '\u{1F1E8}\u{1F1E6}', 'BIH': '\u{1F1E7}\u{1F1E6}', 'QAT': '\u{1F1F6}\u{1F1E6}',
+            'SUI': '\u{1F1E8}\u{1F1ED}', 'BRA': '\u{1F1E7}\u{1F1F7}', 'MAR': '\u{1F1F2}\u{1F1E6}', 'HAI': '\u{1F1ED}\u{1F1F9}',
+            'SCO': '\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}', 'USA': '\u{1F1FA}\u{1F1F8}', 'PAR': '\u{1F1F5}\u{1F1FE}',
+            'AUS': '\u{1F1E6}\u{1F1FA}', 'TUR': '\u{1F1F9}\u{1F1F7}', 'GER': '\u{1F1E9}\u{1F1EA}', 'CUW': '\u{1F1E8}\u{1F1FC}',
+            'CIV': '\u{1F1E8}\u{1F1EE}', 'ECU': '\u{1F1EA}\u{1F1E8}', 'NED': '\u{1F1F3}\u{1F1F1}', 'JPN': '\u{1F1EF}\u{1F1F5}',
+            'SWE': '\u{1F1F8}\u{1F1EA}', 'TUN': '\u{1F1F9}\u{1F1F3}', 'BEL': '\u{1F1E7}\u{1F1EA}', 'EGY': '\u{1F1EA}\u{1F1EC}',
+            'IRN': '\u{1F1EE}\u{1F1F7}', 'NZL': '\u{1F1F3}\u{1F1FF}', 'ESP': '\u{1F1EA}\u{1F1F8}', 'CPV': '\u{1F1E8}\u{1F1FB}',
+            'KSA': '\u{1F1F8}\u{1F1E6}', 'URU': '\u{1F1FA}\u{1F1FE}', 'FRA': '\u{1F1EB}\u{1F1F7}', 'SEN': '\u{1F1F8}\u{1F1F3}',
+            'IRQ': '\u{1F1EE}\u{1F1F6}', 'NOR': '\u{1F1F3}\u{1F1F4}', 'ARG': '\u{1F1E6}\u{1F1F7}', 'ALG': '\u{1F1E9}\u{1F1FF}',
+            'AUT': '\u{1F1E6}\u{1F1F9}', 'JOR': '\u{1F1EF}\u{1F1F4}', 'POR': '\u{1F1F5}\u{1F1F9}', 'COD': '\u{1F1E8}\u{1F1E9}',
+            'UZB': '\u{1F1FA}\u{1F1FF}', 'COL': '\u{1F1E8}\u{1F1F4}', 'ENG': '\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}',
+            'CRO': '\u{1F1ED}\u{1F1F7}', 'GHA': '\u{1F1EC}\u{1F1ED}', 'PAN': '\u{1F1F5}\u{1F1E6}', 'CC': '\u{1F964}'
         };
 
         window.getBandeiraUrl = (code) => {
@@ -567,13 +573,11 @@
 
         document.getElementById('sort-select').addEventListener('change', () => { renderizarAlbum(true); });
 
-        // SISTEMA DE ATUALIZAÇÃO SEM FLICKER
         function renderizarAlbum(forceRebuild = false) {
             const container = document.getElementById('album-container');
             const modoOrdenacao = document.getElementById('sort-select').value;
             let selecoesRender = [...selecoes];
             
-            // Só constrói o DOM do zero se a ordenação mudou, o container está vazio, ou se forçado pelo Menu
             const needsRebuild = forceRebuild || container.children.length === 0 || window.lastSortMode !== modoOrdenacao;
             window.lastSortMode = modoOrdenacao;
 
@@ -612,7 +616,7 @@
                     imgFlag.onerror = () => imgFlag.style.display = 'none';
                     
                     const spanName = document.createElement('span');
-                    // ADICIONADO A SIGLA AO LADO DO NOME AQUI
+                    // NOME COM SIGLA
                     spanName.textContent = `${selecao.nome} (${selecao.originalId})`;
                     
                     title.appendChild(imgFlag);
@@ -634,19 +638,16 @@
                         const btn = document.createElement('button');
                         btn.id = `btn-${key}`;
                         
-                        // LÓGICA DE CLIQUE INTELIGENTE (1 clique = Azul, 2 cliques = Amarelo)
                         btn.addEventListener('click', (e) => {
                             e.preventDefault();
                             if (btn.clickTimeout) {
-                                // Foi um Duplo Clique
                                 clearTimeout(btn.clickTimeout);
                                 btn.clickTimeout = null;
                                 if(navigator.vibrate) navigator.vibrate(50);
-                                figurinhasSalvas[key] = 2; // Repetida
+                                figurinhasSalvas[key] = 2; 
                                 salvarDadosNoBanco();
-                                atualizarCoresBotoes(); // Resposta visual instantânea
+                                atualizarCoresBotoes(); 
                             } else {
-                                // Aguarda 250ms para ver se é só 1 clique
                                 btn.clickTimeout = setTimeout(() => {
                                     btn.clickTimeout = null;
                                     const currentStatus = figurinhasSalvas[key] || 0;
@@ -654,7 +655,7 @@
                                     else if (currentStatus === 1) figurinhasSalvas[key] = 0;
                                     else if (currentStatus === 2) figurinhasSalvas[key] = 0; 
                                     salvarDadosNoBanco();
-                                    atualizarCoresBotoes(); // Resposta visual instantânea
+                                    atualizarCoresBotoes(); 
                                 }, 250);
                             }
                         });
@@ -665,7 +666,6 @@
                     fragment.appendChild(section);
                 });
                 
-                // Mensagem de "Nenhuma repetida"
                 const emptyMsg = document.createElement('div');
                 emptyMsg.id = 'empty-msg';
                 emptyMsg.className = "text-center text-slate-400 mt-20 p-6 bg-white rounded-xl shadow-sm border border-slate-100 max-w-lg mx-auto hidden";
@@ -675,11 +675,9 @@
                 container.appendChild(fragment);
             }
 
-            // Sempre atualiza as cores e os números, sem recarregar o HTML inteiro
             window.atualizarCoresBotoes();
         }
 
-        // Função de pintura otimizada para evitar que o nome/tela pisque
         window.atualizarCoresBotoes = () => {
             let totalFigurinhas = 0, countTemos = 0, countFaltando = 0, countRepetidas = 0;
             const modoOrdenacao = document.getElementById('sort-select').value;
@@ -733,7 +731,6 @@
                 }
             });
 
-            // Atualiza Top Menu Estatísticas
             const percentual = totalFigurinhas === 0 ? 0 : Math.round((countTemos / totalFigurinhas) * 100);
             document.getElementById('progress-percent').textContent = `${percentual}%`;
             document.getElementById('stat-faltando').textContent = countFaltando;
@@ -746,7 +743,7 @@
             }
         };
 
-        // MENSAGEM NO WHATSAPP COM EMOJIS E FORMATO ESPECÍFICO
+        // MENSAGEM NO WHATSAPP EXATAMENTE COMO SOLICITADO
         window.compartilharWhatsApp = () => {
             if (selecoes.length === 0) return alert("Álbum vazio!");
             
@@ -765,7 +762,7 @@
                     else if (status === 2) { repeated.push(i); repetidasTotal++; }
                 }
                 
-                const emoji = window.emojiMap[selecao.originalId] || '⚽';
+                const emoji = window.emojiMap[selecao.originalId] || '\u{26BD}';
                 const label = `${emoji} *${selecao.nome} (${selecao.originalId})*`;
 
                 if (missing.length > 0) textFaltam += `${label}: ${missing.join(', ')}\n`;
