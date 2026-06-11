@@ -6,13 +6,10 @@
     <title>Álbum Copa 2026</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Desabilita o menu de contexto do celular para o toque longo funcionar perfeitamente */
         .no-context {
             -webkit-touch-callout: none;
             user-select: none;
         }
-        
-        /* Estilização moderna da barra de rolagem (para PC) */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f8fafc; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -55,28 +52,42 @@
         </div>
     </header>
 
-    <main class="max-w-5xl mx-auto mt-8 px-4" id="album-container">
-        </main>
+    <main class="max-w-5xl mx-auto mt-8 px-4" id="album-container"></main>
 
     <script>
-        // Estado: 0 = Não tenho, 1 = Tenho, 2 = Repetida
-        let selecoes = JSON.parse(localStorage.getItem('albumSelecoes')) || [];
-        let figurinhasSalvas = JSON.parse(localStorage.getItem('albumCopa2026_v2')) || {};
+        // Lista base de seleções para deixar o álbum visível desde o começo
+        const selecoesBase = [
+            { id: 'CC', nome: 'Coca-Cola (CC)', total: 7 },
+            { id: 'ALG', nome: 'Argélia (ALG)', total: 20 },
+            { id: 'ARG', nome: 'Argentina (ARG)', total: 20 },
+            { id: 'AUS', nome: 'Austrália (AUS)', total: 20 },
+            { id: 'AUT', nome: 'Áustria (AUT)', total: 20 },
+            { id: 'BEL', nome: 'Bélgica (BEL)', total: 20 },
+            { id: 'BIH', nome: 'Bósnia (BIH)', total: 20 },
+            { id: 'BRA', nome: 'Brasil (BRA)', total: 20 },
+            { id: 'ENG', nome: 'Inglaterra (ENG)', total: 20 },
+            { id: 'ESP', nome: 'Espanha (ESP)', total: 20 },
+            { id: 'FRA', nome: 'França (FRA)', total: 20 },
+            { id: 'GER', nome: 'Alemanha (GER)', total: 20 },
+            { id: 'POR', nome: 'Portugal (POR)', total: 20 },
+            { id: 'QAT', nome: 'Catar (QAT)', total: 20 },
+            { id: 'RSA', nome: 'África do Sul (RSA)', total: 20 },
+            { id: 'SCO', nome: 'Escócia (SCO)', total: 20 },
+            { id: 'SEN', nome: 'Senegal (SEN)', total: 20 },
+            { id: 'SUI', nome: 'Suíça (SUI)', total: 20 },
+            { id: 'SWE', nome: 'Suécia (SWE)', total: 20 },
+            { id: 'TUN', nome: 'Tunísia (TUN)', total: 20 }
+        ];
 
-        // Rotina rápida para migrar os dados antigos (se você já tinha marcado como True/False antes)
-        const oldState = JSON.parse(localStorage.getItem('albumCopa2026'));
-        if (oldState && Object.keys(figurinhasSalvas).length === 0) {
-            for (let key in oldState) {
-                figurinhasSalvas[key] = oldState[key] ? 1 : 0;
-            }
-            localStorage.setItem('albumCopa2026_v2', JSON.stringify(figurinhasSalvas));
-        }
+        // Carrega as seleções do cache ou usa a base. Carrega as figurinhas.
+        let selecoes = JSON.parse(localStorage.getItem('albumSelecoes_v3')) || selecoesBase;
+        let figurinhasSalvas = JSON.parse(localStorage.getItem('albumCopa2026_v3')) || {};
 
         const container = document.getElementById('album-container');
         const progressPercent = document.getElementById('progress-percent');
         const progressText = document.getElementById('progress-text');
 
-        // Lida com a importação do arquivo CSV
+        // Lida com a importação do CSV
         document.getElementById('csv-upload').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -86,38 +97,59 @@
         });
 
         function processarCSV(csvText) {
-            const lines = csvText.split('\n');
-            let newState = {};
-            let newSelecoes = [];
+            // Remove o \r para evitar problemas de formatação do Windows e divide por linhas
+            const lines = csvText.replace(/\r/g, '').split('\n');
+            let figurinhasImportadas = 0;
 
-            for (let i = 4; i < lines.length; i++) {
-                const line = lines[i].trim();
-                if (!line) continue;
-                const cols = line.split(',');
-                const selecaoId = cols[1];
-                if (!selecaoId || selecaoId === 'Seleções') continue;
-
-                let maxFigurinhas = 0;
-                for (let j = 1; j <= 20; j++) {
-                    if (cols[j + 1] !== undefined && cols[j + 1] !== '') maxFigurinhas = j;
-                }
-                newSelecoes.push({ id: selecaoId, nome: selecaoId, total: maxFigurinhas });
-
-                for (let j = 1; j <= maxFigurinhas; j++) {
-                    const value = cols[j + 1] ? cols[j + 1].trim().toLowerCase() : '';
-                    if (value === 'true') newState[`${selecaoId}-${j}`] = 1; // 1 = Tenho
+            // Procura a linha de cabeçalho dinamicamente
+            let startRow = 1;
+            for (let i = 0; i < lines.length; i++) {
+                if (lines[i].toLowerCase().includes('seleções') || lines[i].toLowerCase().includes('selecoes')) {
+                    startRow = i + 1;
+                    break;
                 }
             }
 
-            selecoes = newSelecoes;
-            figurinhasSalvas = newState;
+            // Lê as linhas com os dados
+            for (let i = startRow; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                
+                const cols = line.split(',');
+                // Na sua planilha, as siglas estão na segunda coluna (índice 1)
+                const selecaoId = cols[1] ? cols[1].trim() : null; 
+                
+                if (!selecaoId) continue;
+
+                // Verifica quantas colunas de figurinhas têm preenchimento nessa linha (até 20)
+                let maxFigurinhas = 0;
+                for (let j = 1; j <= 20; j++) {
+                    if (cols[j + 1] !== undefined && cols[j + 1] !== '') {
+                        maxFigurinhas = j;
+                        const value = cols[j + 1].trim().toLowerCase();
+                        // Se estiver True ou Verdadeiro na planilha, marca como "Tenho" (1)
+                        if (value === 'true' || value === 'verdadeiro' || value === '1') {
+                            figurinhasSalvas[`${selecaoId}-${j}`] = 1;
+                            figurinhasImportadas++;
+                        }
+                    }
+                }
+
+                // Se essa seleção estiver na planilha mas não estiver na nossa lista base, adiciona ela
+                const selecaoExiste = selecoes.find(s => s.id === selecaoId);
+                if (!selecaoExiste && maxFigurinhas > 0) {
+                    selecoes.push({ id: selecaoId, nome: selecaoId, total: maxFigurinhas });
+                }
+            }
+
             salvarDados();
             renderizarAlbum();
+            alert(`Planilha lida com sucesso! ${figurinhasImportadas} figurinhas foram marcadas.`);
         }
 
         function salvarDados() {
-            localStorage.setItem('albumSelecoes', JSON.stringify(selecoes));
-            localStorage.setItem('albumCopa2026_v2', JSON.stringify(figurinhasSalvas));
+            localStorage.setItem('albumSelecoes_v3', JSON.stringify(selecoes));
+            localStorage.setItem('albumCopa2026_v3', JSON.stringify(figurinhasSalvas));
         }
 
         function renderizarAlbum() {
@@ -125,12 +157,6 @@
             let totalFigurinhas = 0;
             let figurinhasObtidas = 0;
 
-            if (selecoes.length === 0) {
-                container.innerHTML = '<div class="text-center text-slate-400 mt-20"><svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg><p class="text-lg font-semibold">Nenhuma figurinha no álbum.</p><p class="text-sm">Clique em "Importar CSV" lá em cima para carregar sua planilha.</p></div>';
-                return;
-            }
-
-            // Criação das seções do álbum
             selecoes.forEach(selecao => {
                 const section = document.createElement('div');
                 section.className = 'mb-8';
@@ -141,7 +167,6 @@
                 section.appendChild(title);
 
                 const grid = document.createElement('div');
-                // Flex wrap permite que os botões se ajustem melhor na tela e fiquem menores
                 grid.className = 'flex flex-wrap gap-2';
 
                 for (let i = 1; i <= selecao.total; i++) {
@@ -154,5 +179,12 @@
                     const btn = document.createElement('button');
                     btn.textContent = i;
                     
-                    // Design base dos botões menores
-                    let baseClass = 'w-10 h-10 text-xs sm:text-sm font-semibold rounded-lg flex items-center justify-center transition-all
+                    let baseClass = 'w-10 h-10 text-xs sm:text-sm font-semibold rounded-lg flex items-center justify-center transition-all duration-200 transform active:scale-95 no-context shadow-sm relative ';
+                    
+                    if (status === 0) { // Faltando
+                        baseClass += 'bg-white text-slate-400 border border-slate-200 hover:border-indigo-300 hover:text-indigo-500';
+                    } else if (status === 1) { // Tenho
+                        baseClass += 'bg-indigo-500 text-white shadow-indigo-200/50 hover:bg-indigo-600';
+                    } else if (status === 2) { // Repetida
+                        baseClass += 'bg-amber-400 text-white shadow-amber-200/50 hover:bg-amber-500';
+                        btn.innerHTML = `${i} <span class="absolute -top-1 -right
