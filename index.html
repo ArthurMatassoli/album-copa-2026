@@ -6,7 +6,7 @@
     <title>Álbum Copa 2026 - Colaborativo</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .no-context { -webkit-touch-callout: none; user-select: none; }
+        .no-context { -webkit-touch-callout: none; user-select: none; touch-action: manipulation; }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f8fafc; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -19,9 +19,24 @@
 
     <div id="auth-screen" class="flex-1 items-center justify-center p-4 fade-in overflow-y-auto py-10" style="display: flex;">
         <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-100 my-auto">
-            <div class="text-center mb-8">
+            <div class="text-center mb-6">
                 <h1 class="text-3xl font-extrabold text-indigo-900 tracking-tight mb-2">Álbum 2026</h1>
                 <p class="text-slate-500 text-sm" id="auth-subtitle">Faça login ou cadastre-se para acessar.</p>
+            </div>
+
+            <button type="button" onclick="loginComGoogle()" class="w-full bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold py-3 px-4 rounded-lg shadow-sm transition transform active:scale-95 flex items-center justify-center gap-3 mb-4">
+                <svg class="w-5 h-5" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                </svg>
+                Entrar com o Google
+            </button>
+
+            <div class="relative flex items-center justify-center py-2 mb-2">
+                <div class="border-t border-slate-200 w-full"></div>
+                <span class="bg-white px-3 text-xs text-slate-400 absolute">OU POR E-MAIL</span>
             </div>
 
             <form id="auth-form" class="space-y-4">
@@ -101,11 +116,12 @@
                         <option value="album">Ordem do Álbum</option>
                         <option value="alfabetica">Ordem Alfabética</option>
                         <option value="preenchidas">Mais Preenchidas</option>
+                        <option value="repetidas">Só Repetidas</option>
                     </select>
 
                     <button type="button" onclick="document.getElementById('csv-upload').click()" class="cursor-pointer text-indigo-600 hover:bg-indigo-50 text-sm font-semibold transition flex items-center bg-white border border-slate-200 py-1.5 px-3 rounded-md shadow-sm">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                         <span class="hidden sm:inline">Importar CSV</span>
+                        <svg class="w-4 h-4 sm:ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                     </button>
                     <input type="file" id="csv-upload" accept=".csv" style="display: none;">
 
@@ -116,21 +132,31 @@
 
                     <button onclick="compartilharWhatsApp()" class="text-green-700 hover:bg-green-50 text-sm font-semibold transition flex items-center bg-white border border-green-200 py-1.5 px-3 rounded-md shadow-sm">
                         <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
-                        <span class="hidden md:inline">Faltantes</span>
+                        <span class="hidden md:inline">Trocar</span>
                     </button>
 
                     <div class="relative group">
                         <button class="p-2 text-slate-500 hover:bg-slate-100 rounded-md transition outline-none">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                         </button>
-                        <div class="absolute right-0 mt-2 w-64 bg-white border border-slate-100 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 p-4 transform origin-top-right">
-                            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Progresso do Álbum</h3>
-                            <div class="flex items-end gap-2 mb-1"><span id="progress-percent" class="text-3xl font-black text-indigo-600">0%</span></div>
-                            <p id="progress-text" class="text-sm text-slate-500 mb-3">0 de 0 figurinhas</p>
-                            <div class="space-y-2 text-xs text-slate-600 border-t pt-3">
-                                <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-white border border-slate-300"></div> Faltando</div>
-                                <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-indigo-500"></div> Temos</div>
-                                <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-amber-400"></div> Repetida</div>
+                        <div class="absolute right-0 mt-2 w-56 bg-white border border-slate-100 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 p-4 transform origin-top-right">
+                            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 border-b pb-2">Seu Progresso</h3>
+                            <div class="space-y-3 text-sm text-slate-600">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-white border border-slate-300"></div> Faltando</div> 
+                                    <span id="stat-faltando" class="font-bold text-slate-400">0</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-indigo-500"></div> Temos</div> 
+                                    <span id="stat-temos" class="font-bold text-indigo-600">0</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-amber-400"></div> Repetidas</div> 
+                                    <span id="stat-repetidas" class="font-bold text-amber-500">0</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-3 border-t border-slate-100 text-center">
+                                <span class="text-2xl font-black text-slate-800" id="progress-percent">0%</span>
                             </div>
                         </div>
                     </div>
@@ -155,7 +181,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, collection, addDoc, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -170,6 +196,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const googleProvider = new GoogleAuthProvider();
 
         window.isSignup = true;
         window.currentProjectId = null;
@@ -178,11 +205,9 @@
         let selecoes = [];
         let figurinhasSalvas = {};
 
-        // Checar se a pessoa abriu um Link de Convite
         const urlParams = new URLSearchParams(window.location.search);
         let pendingJoinId = urlParams.get('join');
 
-        // MAPA DE BANDEIRAS
         window.getBandeiraUrl = (code) => {
             const flags = {
                 'FWC_1': 'https://upload.wikimedia.org/wikipedia/pt/2/23/Logotipo_da_Copa_do_Mundo_FIFA_de_2026.png',
@@ -206,7 +231,6 @@
             'FWC_2', 'CC'
         ];
 
-        // GERA A ESTRUTURA OFICIAL 2026 AUTOMATICAMENTE
         function gerarSelecoesPadrao() {
             const nomes = {
                 'MEX': 'México', 'RSA': 'África do Sul', 'KOR': 'Coreia do Sul', 'CZE': 'República Tcheca',
@@ -234,10 +258,34 @@
         // -------------------------
         // FLUXO DE LOGIN E CONVITE
         // -------------------------
+        window.loginComGoogle = async () => {
+            const errorMsg = document.getElementById('auth-error-msg');
+            errorMsg.classList.add('hidden');
+            try {
+                const result = await signInWithPopup(auth, googleProvider);
+                const user = result.user;
+                
+                const userRef = doc(db, "users", user.uid);
+                const docSnap = await getDoc(userRef);
+                
+                if (!docSnap.exists()) {
+                    await setDoc(userRef, {
+                        nome: user.displayName || "Usuário",
+                        telefone: "",
+                        email: user.email,
+                        criadoEm: serverTimestamp()
+                    });
+                }
+            } catch (error) {
+                errorMsg.textContent = "Erro ao entrar com Google. Tente novamente.";
+                errorMsg.classList.remove('hidden');
+            }
+        };
+
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 document.getElementById('auth-screen').style.display = 'none';
-                document.getElementById('dash-user-email').textContent = `Logado como: ${user.email}`;
+                document.getElementById('dash-user-email').textContent = `Conectado como: ${user.email}`;
                 
                 if (pendingJoinId) {
                     await tentarEntrarNoProjeto(pendingJoinId);
@@ -262,7 +310,6 @@
             document.getElementById('auth-error-msg').classList.add('hidden');
             document.getElementById('signup-fields-top').style.display = window.isSignup ? 'block' : 'none';
             document.getElementById('confirm-password-container').style.display = window.isSignup ? 'block' : 'none';
-            document.getElementById('forgot-password-btn').style.display = window.isSignup ? 'none' : 'block';
             document.getElementById('auth-submit-btn').textContent = window.isSignup ? 'Cadastrar e Entrar' : 'Entrar';
             document.getElementById('auth-toggle-text').textContent = window.isSignup ? 'Já tem uma conta?' : 'Ainda não tem conta?';
             document.getElementById('auth-toggle-btn').textContent = window.isSignup ? 'Fazer Login' : 'Cadastrar';
@@ -327,7 +374,7 @@
                                     ${roleTag}
                                 </div>
                                 <h3 class="font-extrabold text-lg text-slate-800 truncate">${data.nomeProjeto}</h3>
-                                <p class="text-xs font-semibold text-slate-400 mt-1">${(data.guests ? data.guests.length : 0) + 1} Participantes</p>
+                                <p class="text-xs font-semibold text-slate-400 mt-1">${(data.guests ? data.guests.length : 0) + 1} Participante(s)</p>
                             </div>
                         `;
                     }
@@ -400,7 +447,7 @@
         window.gerarLinkConvite = () => {
             const link = `${window.location.origin}${window.location.pathname}?join=${window.currentProjectId}`;
             navigator.clipboard.writeText(link).then(() => {
-                alert("Link de convite copiado!\n\nEnvie para seus amigos. Eles entrarão neste álbum.");
+                alert("Link copiado!\n\nEnvie para seus amigos. Eles entrarão neste álbum.");
             }).catch(() => {
                 alert("Copie este link para enviar: \n" + link);
             });
@@ -440,14 +487,13 @@
             });
         }
 
-        // CSV MOBILE BLINDADO (Carrega no banco e ignora estrutura de projeto anterior)
         document.getElementById('csv-upload').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(evt) { 
                 processarCSV(evt.target.result); 
-                e.target.value = ''; // Permite subir o mesmo arquivo de novo se errar
+                e.target.value = ''; 
             };
             reader.readAsText(file);
         });
@@ -500,11 +546,14 @@
             container.innerHTML = '';
             
             let totalFigurinhas = 0;
-            let figurinhasObtidas = 0;
+            let countTemos = 0;
+            let countFaltando = 0;
+            let countRepetidas = 0;
+            
             let selecoesRender = [...selecoes];
             const modoOrdenacao = document.getElementById('sort-select').value;
 
-            if (modoOrdenacao === 'album') {
+            if (modoOrdenacao === 'album' || modoOrdenacao === 'repetidas') {
                 selecoesRender.sort((a, b) => (a.leituraIndex || 0) - (b.leituraIndex || 0));
             } else if (modoOrdenacao === 'alfabetica') {
                 selecoesRender.sort((a, b) => a.nome.localeCompare(b.nome));
@@ -520,9 +569,72 @@
             selecoesRender.forEach(selecao => {
                 const section = document.createElement('div');
                 section.className = 'mb-8';
-                const qtdPreenchidas = contarPreenchidas(selecao);
-                const totalDestaSelecao = (selecao.end - selecao.start) + 1;
                 
+                const grid = document.createElement('div');
+                grid.className = 'flex flex-wrap gap-2';
+                let hasRepetidaSection = false;
+                let gridRenderizadoEmpty = true;
+                const totalDestaSelecao = (selecao.end - selecao.start) + 1;
+
+                for (let i = selecao.start; i <= selecao.end; i++) {
+                    totalFigurinhas++;
+                    const key = `${selecao.originalId}-${i}`;
+                    const status = figurinhasSalvas[key] || 0;
+                    
+                    if (status === 0) countFaltando++;
+                    if (status > 0) countTemos++;
+                    if (status === 2) {
+                        countRepetidas++;
+                        hasRepetidaSection = true;
+                    }
+
+                    // Se estamos no modo de Só Repetidas, esconde as normais
+                    if (modoOrdenacao === 'repetidas' && status !== 2) continue;
+                    gridRenderizadoEmpty = false;
+
+                    const btn = document.createElement('button');
+                    btn.textContent = i;
+                    let baseClass = 'w-10 h-10 text-xs sm:text-sm font-semibold rounded-lg flex items-center justify-center transition-all duration-200 transform active:scale-95 no-context shadow-sm relative ';
+                    
+                    if (status === 0) baseClass += 'bg-white text-slate-400 border border-slate-200';
+                    else if (status === 1) baseClass += 'bg-indigo-500 text-white';
+                    else if (status === 2) {
+                        baseClass += 'bg-amber-400 text-white';
+                        btn.innerHTML = `${i} <span class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white font-bold ring-2 ring-white">+1</span>`;
+                    }
+                    btn.className = baseClass;
+
+                    // Lógica de Cliques Inteligentes (1 clique = Azul, 2 = Amarelo, +1 = Branco)
+                    let clickTimeout = null;
+
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        if (clickTimeout) {
+                            // É o SEGUNDO clique seguido!
+                            clearTimeout(clickTimeout);
+                            clickTimeout = null;
+                            if(navigator.vibrate) navigator.vibrate(50);
+                            figurinhasSalvas[key] = 2; // Força como Repetida
+                            salvarDadosNoBanco();
+                        } else {
+                            // Aguarda 250ms para ver se é só 1 clique
+                            clickTimeout = setTimeout(() => {
+                                clickTimeout = null;
+                                if (status === 0) figurinhasSalvas[key] = 1; 
+                                else if (status === 1) figurinhasSalvas[key] = 0;
+                                else if (status === 2) figurinhasSalvas[key] = 0; // Desmarca repetida
+                                salvarDadosNoBanco();
+                            }, 250);
+                        }
+                    });
+
+                    grid.appendChild(btn);
+                }
+
+                // Se não tem repetida e o filtro tá ativo, não renderiza a sessão
+                if (modoOrdenacao === 'repetidas' && gridRenderizadoEmpty) return;
+
+                const qtdPreenchidas = contarPreenchidas(selecao);
                 const titleContainer = document.createElement('div');
                 titleContainer.className = 'flex justify-between items-center mb-3 ml-1 border-b border-slate-200 pb-1';
                 
@@ -547,87 +659,51 @@
                 titleContainer.appendChild(title);
                 titleContainer.appendChild(counter);
                 section.appendChild(titleContainer);
-
-                const grid = document.createElement('div');
-                grid.className = 'flex flex-wrap gap-2';
-
-                for (let i = selecao.start; i <= selecao.end; i++) {
-                    totalFigurinhas++;
-                    const key = `${selecao.originalId}-${i}`;
-                    const status = figurinhasSalvas[key] || 0;
-                    if (status > 0) figurinhasObtidas++;
-
-                    const btn = document.createElement('button');
-                    btn.textContent = i;
-                    let baseClass = 'w-10 h-10 text-xs sm:text-sm font-semibold rounded-lg flex items-center justify-center transition-all duration-200 transform active:scale-95 no-context shadow-sm relative ';
-                    
-                    if (status === 0) baseClass += 'bg-white text-slate-400 border border-slate-200';
-                    else if (status === 1) baseClass += 'bg-indigo-500 text-white';
-                    else if (status === 2) {
-                        baseClass += 'bg-amber-400 text-white';
-                        btn.innerHTML = `${i} <span class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white font-bold ring-2 ring-white">+1</span>`;
-                    }
-                    btn.className = baseClass;
-
-                    let isLongPress = false;
-                    let pressTimer;
-
-                    const startPress = () => {
-                        isLongPress = false;
-                        pressTimer = setTimeout(() => {
-                            isLongPress = true;
-                            if(navigator.vibrate) navigator.vibrate(50);
-                            figurinhasSalvas[key] = (status === 2) ? 0 : 2;
-                            salvarDadosNoBanco();
-                        }, 500);
-                    };
-                    const cancelPress = () => clearTimeout(pressTimer);
-                    const endPress = (evt) => {
-                        evt.preventDefault();
-                        clearTimeout(pressTimer);
-                        if (!isLongPress) {
-                            if (status === 0) figurinhasSalvas[key] = 1; 
-                            else if (status === 1) figurinhasSalvas[key] = 0;
-                            else if (status === 2) figurinhasSalvas[key] = 1;
-                            salvarDadosNoBanco();
-                        }
-                    };
-
-                    btn.addEventListener('mousedown', startPress);
-                    btn.addEventListener('touchstart', startPress, {passive: false});
-                    btn.addEventListener('mouseup', endPress);
-                    btn.addEventListener('touchend', endPress, {passive: false});
-                    btn.addEventListener('mouseleave', cancelPress);
-                    btn.addEventListener('touchmove', cancelPress, {passive: true});
-
-                    grid.appendChild(btn);
-                }
                 section.appendChild(grid);
                 container.appendChild(section);
             });
 
-            const percentual = totalFigurinhas === 0 ? 0 : Math.round((figurinhasObtidas / totalFigurinhas) * 100);
+            if (modoOrdenacao === 'repetidas' && countRepetidas === 0) {
+                container.innerHTML = `<div class="text-center text-slate-400 mt-20 p-6 bg-white rounded-xl shadow-sm border border-slate-100 max-w-lg mx-auto"><h2 class="text-xl font-bold text-slate-700 mb-2">Nenhuma Repetida</h2><p>Você ainda não marcou nenhuma figurinha como repetida neste álbum.</p></div>`;
+            }
+
+            // Atualiza Estatísticas do Menu
+            const percentual = totalFigurinhas === 0 ? 0 : Math.round((countTemos / totalFigurinhas) * 100);
             document.getElementById('progress-percent').textContent = `${percentual}%`;
-            document.getElementById('progress-text').textContent = `${figurinhasObtidas} de ${totalFigurinhas} figurinhas`;
+            document.getElementById('stat-faltando').textContent = countFaltando;
+            document.getElementById('stat-temos').textContent = countTemos;
+            document.getElementById('stat-repetidas').textContent = countRepetidas;
         }
 
         window.compartilharWhatsApp = () => {
             if (selecoes.length === 0) return alert("Álbum vazio!");
+            
+            const modoOrdenacao = document.getElementById('sort-select').value;
+            const isModoRepetidas = (modoOrdenacao === 'repetidas');
             const nomeProjeto = document.getElementById('album-title-display').textContent;
-            let text = `⚽ Olá! Estou completando meu álbum "${nomeProjeto}". Alguém tem essas para trocar?\n\n*FALTAM:*\n`;
-            let faltamTotal = 0;
+            
+            let text = isModoRepetidas 
+                ? `⚽ Olá! Tenho essas figurinhas REPETIDAS do álbum "${nomeProjeto}" para trocar:\n\n*REPETIDAS:*\n`
+                : `⚽ Olá! Estou completando meu álbum "${nomeProjeto}". Alguém tem essas para trocar?\n\n*FALTAM:*\n`;
+                
+            let achouAlguma = 0;
+
             selecoes.forEach(selecao => {
-                let missing = [];
+                let listArray = [];
                 for (let i = selecao.start; i <= selecao.end; i++) {
                     const key = `${selecao.originalId}-${i}`;
-                    if (!figurinhasSalvas[key] || figurinhasSalvas[key] === 0) {
-                        missing.push(i);
-                        faltamTotal++;
+                    const status = figurinhasSalvas[key] || 0;
+                    
+                    if (isModoRepetidas) {
+                        if (status === 2) { listArray.push(i); achouAlguma++; }
+                    } else {
+                        if (status === 0) { listArray.push(i); achouAlguma++; }
                     }
                 }
-                if (missing.length > 0) text += `*${selecao.nome}*: ${missing.join(', ')}\n`;
+                if (listArray.length > 0) text += `*${selecao.nome}*: ${listArray.join(', ')}\n`;
             });
-            if (faltamTotal === 0) return alert("Álbum 100% completo!");
+            
+            if (achouAlguma === 0) return alert(isModoRepetidas ? "Você não tem repetidas!" : "Álbum 100% completo!");
             window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
         };
     </script>
