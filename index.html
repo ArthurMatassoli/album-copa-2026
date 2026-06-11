@@ -323,6 +323,7 @@
             document.getElementById('auth-error-msg').classList.add('hidden');
             document.getElementById('signup-fields-top').style.display = window.isSignup ? 'block' : 'none';
             document.getElementById('confirm-password-container').style.display = window.isSignup ? 'block' : 'none';
+            document.getElementById('forgot-password-btn').style.display = window.isSignup ? 'none' : 'block';
             document.getElementById('auth-submit-btn').textContent = window.isSignup ? 'Cadastrar e Entrar' : 'Entrar';
             document.getElementById('auth-toggle-text').textContent = window.isSignup ? 'Já tem uma conta?' : 'Ainda não tem conta?';
             document.getElementById('auth-toggle-btn').textContent = window.isSignup ? 'Fazer Login' : 'Cadastrar';
