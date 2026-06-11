@@ -202,11 +202,23 @@
         window.currentProjectId = null;
         window.unsubscribeAlbum = null;
         window.unsubscribeProjetos = null;
+        window.lastSortMode = null;
         let selecoes = [];
         let figurinhasSalvas = {};
 
         const urlParams = new URLSearchParams(window.location.search);
         let pendingJoinId = urlParams.get('join');
+
+        // MAPA DE BANDEIRAS E EMOJIS
+        window.emojiMap = {
+            'FWC': '🏆', 'MEX': '🇲🇽', 'RSA': '🇿🇦', 'KOR': '🇰🇷', 'CZE': '🇨🇿', 'CAN': '🇨🇦', 'BIH': '🇧🇦', 'QAT': '🇶🇦', 'SUI': '🇨🇭',
+            'BRA': '🇧🇷', 'MAR': '🇲🇦', 'HAI': '🇭🇹', 'SCO': '🏴󠁧󠁢󠁳󠁣󠁴󠁿', 'USA': '🇺🇸', 'PAR': '🇵🇾', 'AUS': '🇦🇺', 'TUR': '🇹🇷',
+            'GER': '🇩🇪', 'CUW': '🇨🇼', 'CIV': '🇨🇮', 'ECU': '🇪🇨', 'NED': '🇳🇱', 'JPN': '🇯🇵', 'SWE': '🇸🇪', 'TUN': '🇹🇳',
+            'BEL': '🇧🇪', 'EGY': '🇪🇬', 'IRN': '🇮🇷', 'NZL': '🇳🇿', 'ESP': '🇪🇸', 'CPV': '🇨🇻', 'KSA': '🇸🇦', 'URU': '🇺🇾',
+            'FRA': '🇫🇷', 'SEN': '🇸🇳', 'IRQ': '🇮🇶', 'NOR': '🇳🇴', 'ARG': '🇦🇷', 'ALG': '🇩🇿', 'AUT': '🇦🇹', 'JOR': '🇯🇴',
+            'POR': '🇵🇹', 'COD': '🇨🇩', 'UZB': '🇺🇿', 'COL': '🇨🇴', 'ENG': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'CRO': '🇭🇷', 'GHA': '🇬🇭', 'PAN': '🇵🇦',
+            'CC': '🥤'
+        };
 
         window.getBandeiraUrl = (code) => {
             const flags = {
@@ -277,7 +289,8 @@
                     });
                 }
             } catch (error) {
-                errorMsg.textContent = "Erro ao entrar com Google. Tente novamente.";
+                console.error("Erro no Google Sign-In:", error);
+                errorMsg.textContent = "Erro Google: " + error.message;
                 errorMsg.classList.remove('hidden');
             }
         };
@@ -345,6 +358,22 @@
         });
 
         window.logout = () => signOut(auth);
+
+        window.recuperarSenha = () => {
+            const email = document.getElementById('auth-email').value;
+            const errorMsg = document.getElementById('auth-error-msg');
+            if (!email) {
+                errorMsg.textContent = "Preencha seu E-mail acima para recuperar a senha.";
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+            sendPasswordResetEmail(auth, email).then(() => {
+                alert("Link de redefinição enviado com sucesso para: " + email);
+            }).catch(err => {
+                errorMsg.textContent = "Erro: " + err.message;
+                errorMsg.classList.remove('hidden');
+            });
+        };
 
         // -------------------------
         // GESTÃO DE PROJETOS E CONVITES
@@ -454,7 +483,7 @@
         };
 
         // -------------------------
-        // RENDERIZAÇÃO E EDIÇÃO DO ÁLBUM
+        // RENDERIZAÇÃO INTELIGENTE (Sem Flicker) E EDIÇÃO DO ÁLBUM
         // -------------------------
         window.abrirProjeto = (projectId, projectName) => {
             window.currentProjectId = projectId;
@@ -468,7 +497,7 @@
                     const data = docSnap.data();
                     selecoes = data.selecoes || [];
                     figurinhasSalvas = data.figurinhasSalvas || {};
-                    renderizarAlbum();
+                    renderizarAlbum(); 
                 }
             });
         };
@@ -511,16 +540,12 @@
 
                 if (selecaoId === 'FWC') {
                     for (let j = 1; j <= 19; j++) {
-                        if (['true', 'verdadeiro', '1'].includes(cols[j + 1] ? cols[j + 1].trim().toLowerCase() : '')) {
-                            newState[`FWC-${j}`] = 1; 
-                        }
+                        if (['true', 'verdadeiro', '1'].includes(cols[j + 1] ? cols[j + 1].trim().toLowerCase() : '')) newState[`FWC-${j}`] = 1; 
                     }
                 } else {
                     for (let j = 1; j <= 50; j++) {
                         if (cols[j + 1] !== undefined && cols[j + 1].trim() !== '') {
-                            if (['true', 'verdadeiro', '1'].includes(cols[j + 1].trim().toLowerCase())) {
-                                newState[`${selecaoId}-${j}`] = 1; 
-                            }
+                            if (['true', 'verdadeiro', '1'].includes(cols[j + 1].trim().toLowerCase())) newState[`${selecaoId}-${j}`] = 1; 
                         }
                     }
                 }
@@ -539,42 +564,128 @@
             return count;
         }
 
-        document.getElementById('sort-select').addEventListener('change', renderizarAlbum);
+        document.getElementById('sort-select').addEventListener('change', () => { renderizarAlbum(true); });
 
-        function renderizarAlbum() {
+        // SISTEMA DE ATUALIZAÇÃO SEM FLICKER
+        function renderizarAlbum(forceRebuild = false) {
             const container = document.getElementById('album-container');
-            container.innerHTML = '';
-            
-            let totalFigurinhas = 0;
-            let countTemos = 0;
-            let countFaltando = 0;
-            let countRepetidas = 0;
-            
-            let selecoesRender = [...selecoes];
             const modoOrdenacao = document.getElementById('sort-select').value;
+            let selecoesRender = [...selecoes];
+            
+            // Só constrói o DOM do zero se a ordenação mudou, o container está vazio, ou se forçado pelo Menu
+            const needsRebuild = forceRebuild || container.children.length === 0 || window.lastSortMode !== modoOrdenacao;
+            window.lastSortMode = modoOrdenacao;
 
-            if (modoOrdenacao === 'album' || modoOrdenacao === 'repetidas') {
-                selecoesRender.sort((a, b) => (a.leituraIndex || 0) - (b.leituraIndex || 0));
-            } else if (modoOrdenacao === 'alfabetica') {
-                selecoesRender.sort((a, b) => a.nome.localeCompare(b.nome));
-            } else if (modoOrdenacao === 'preenchidas') {
-                selecoesRender.sort((a, b) => {
-                    const countA = contarPreenchidas(a);
-                    const countB = contarPreenchidas(b);
-                    if (countA === countB) return (a.leituraIndex || 0) - (b.leituraIndex || 0);
-                    return countB - countA;
+            if (needsRebuild) {
+                container.innerHTML = '';
+                const fragment = document.createDocumentFragment();
+
+                if (modoOrdenacao === 'album' || modoOrdenacao === 'repetidas') {
+                    selecoesRender.sort((a, b) => (a.leituraIndex || 0) - (b.leituraIndex || 0));
+                } else if (modoOrdenacao === 'alfabetica') {
+                    selecoesRender.sort((a, b) => a.nome.localeCompare(b.nome));
+                } else if (modoOrdenacao === 'preenchidas') {
+                    selecoesRender.sort((a, b) => {
+                        const countA = contarPreenchidas(a);
+                        const countB = contarPreenchidas(b);
+                        if (countA === countB) return (a.leituraIndex || 0) - (b.leituraIndex || 0);
+                        return countB - countA;
+                    });
+                }
+
+                selecoesRender.forEach(selecao => {
+                    const section = document.createElement('div');
+                    section.className = 'mb-8 album-section';
+                    section.id = `section-${selecao.originalId}`;
+                    
+                    const titleContainer = document.createElement('div');
+                    titleContainer.className = 'flex justify-between items-center mb-3 ml-1 border-b border-slate-200 pb-1';
+                    
+                    const title = document.createElement('h2');
+                    title.className = 'text-sm font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2';
+                    
+                    const imgFlag = document.createElement('img');
+                    imgFlag.src = window.getBandeiraUrl(selecao.id);
+                    imgFlag.alt = selecao.nome;
+                    imgFlag.className = 'w-5 h-3.5 object-cover rounded shadow-sm';
+                    imgFlag.onerror = () => imgFlag.style.display = 'none';
+                    
+                    const spanName = document.createElement('span');
+                    // ADICIONADO A SIGLA AO LADO DO NOME AQUI
+                    spanName.textContent = `${selecao.nome} (${selecao.originalId})`;
+                    
+                    title.appendChild(imgFlag);
+                    title.appendChild(spanName);
+
+                    const counter = document.createElement('span');
+                    counter.id = `counter-${selecao.originalId}`;
+                    counter.className = 'text-xs font-semibold text-slate-400';
+                    
+                    titleContainer.appendChild(title);
+                    titleContainer.appendChild(counter);
+                    section.appendChild(titleContainer);
+
+                    const grid = document.createElement('div');
+                    grid.className = 'flex flex-wrap gap-2';
+
+                    for (let i = selecao.start; i <= selecao.end; i++) {
+                        const key = `${selecao.originalId}-${i}`;
+                        const btn = document.createElement('button');
+                        btn.id = `btn-${key}`;
+                        
+                        // LÓGICA DE CLIQUE INTELIGENTE (1 clique = Azul, 2 cliques = Amarelo)
+                        btn.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            if (btn.clickTimeout) {
+                                // Foi um Duplo Clique
+                                clearTimeout(btn.clickTimeout);
+                                btn.clickTimeout = null;
+                                if(navigator.vibrate) navigator.vibrate(50);
+                                figurinhasSalvas[key] = 2; // Repetida
+                                salvarDadosNoBanco();
+                                atualizarCoresBotoes(); // Resposta visual instantânea
+                            } else {
+                                // Aguarda 250ms para ver se é só 1 clique
+                                btn.clickTimeout = setTimeout(() => {
+                                    btn.clickTimeout = null;
+                                    const currentStatus = figurinhasSalvas[key] || 0;
+                                    if (currentStatus === 0) figurinhasSalvas[key] = 1; 
+                                    else if (currentStatus === 1) figurinhasSalvas[key] = 0;
+                                    else if (currentStatus === 2) figurinhasSalvas[key] = 0; 
+                                    salvarDadosNoBanco();
+                                    atualizarCoresBotoes(); // Resposta visual instantânea
+                                }, 250);
+                            }
+                        });
+
+                        grid.appendChild(btn);
+                    }
+                    section.appendChild(grid);
+                    fragment.appendChild(section);
                 });
+                
+                // Mensagem de "Nenhuma repetida"
+                const emptyMsg = document.createElement('div');
+                emptyMsg.id = 'empty-msg';
+                emptyMsg.className = "text-center text-slate-400 mt-20 p-6 bg-white rounded-xl shadow-sm border border-slate-100 max-w-lg mx-auto hidden";
+                emptyMsg.innerHTML = `<h2 class="text-xl font-bold text-slate-700 mb-2">Nenhuma Repetida</h2><p>Você ainda não marcou nenhuma figurinha como repetida neste projeto.</p>`;
+                fragment.appendChild(emptyMsg);
+
+                container.appendChild(fragment);
             }
 
-            selecoesRender.forEach(selecao => {
-                const section = document.createElement('div');
-                section.className = 'mb-8';
-                
-                const grid = document.createElement('div');
-                grid.className = 'flex flex-wrap gap-2';
-                let hasRepetidaSection = false;
-                let gridRenderizadoEmpty = true;
-                const totalDestaSelecao = (selecao.end - selecao.start) + 1;
+            // Sempre atualiza as cores e os números, sem recarregar o HTML inteiro
+            window.atualizarCoresBotoes();
+        }
+
+        // Função de pintura otimizada para evitar que o nome/tela pisque
+        window.atualizarCoresBotoes = () => {
+            let totalFigurinhas = 0, countTemos = 0, countFaltando = 0, countRepetidas = 0;
+            const modoOrdenacao = document.getElementById('sort-select').value;
+            
+            selecoes.forEach(selecao => {
+                let preenchidasLocal = 0;
+                let temRepetidaAqui = false;
 
                 for (let i = selecao.start; i <= selecao.end; i++) {
                     totalFigurinhas++;
@@ -582,129 +693,100 @@
                     const status = figurinhasSalvas[key] || 0;
                     
                     if (status === 0) countFaltando++;
-                    if (status > 0) countTemos++;
-                    if (status === 2) {
-                        countRepetidas++;
-                        hasRepetidaSection = true;
-                    }
+                    if (status > 0) { countTemos++; preenchidasLocal++; }
+                    if (status === 2) { countRepetidas++; temRepetidaAqui = true; }
 
-                    // Se estamos no modo de Só Repetidas, esconde as normais
-                    if (modoOrdenacao === 'repetidas' && status !== 2) continue;
-                    gridRenderizadoEmpty = false;
-
-                    const btn = document.createElement('button');
-                    btn.textContent = i;
-                    let baseClass = 'w-10 h-10 text-xs sm:text-sm font-semibold rounded-lg flex items-center justify-center transition-all duration-200 transform active:scale-95 no-context shadow-sm relative ';
-                    
-                    if (status === 0) baseClass += 'bg-white text-slate-400 border border-slate-200';
-                    else if (status === 1) baseClass += 'bg-indigo-500 text-white';
-                    else if (status === 2) {
-                        baseClass += 'bg-amber-400 text-white';
-                        btn.innerHTML = `${i} <span class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white font-bold ring-2 ring-white">+1</span>`;
-                    }
-                    btn.className = baseClass;
-
-                    // Lógica de Cliques Inteligentes (1 clique = Azul, 2 = Amarelo, +1 = Branco)
-                    let clickTimeout = null;
-
-                    btn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        if (clickTimeout) {
-                            // É o SEGUNDO clique seguido!
-                            clearTimeout(clickTimeout);
-                            clickTimeout = null;
-                            if(navigator.vibrate) navigator.vibrate(50);
-                            figurinhasSalvas[key] = 2; // Força como Repetida
-                            salvarDadosNoBanco();
+                    const btn = document.getElementById(`btn-${key}`);
+                    if (btn) {
+                        let baseClass = 'w-10 h-10 text-xs sm:text-sm font-semibold rounded-lg flex items-center justify-center transition-all duration-200 transform active:scale-95 no-context shadow-sm relative ';
+                        
+                        if (status === 0) baseClass += 'bg-white text-slate-400 border border-slate-200 hover:border-indigo-300';
+                        else if (status === 1) baseClass += 'bg-indigo-500 text-white hover:bg-indigo-600';
+                        else if (status === 2) baseClass += 'bg-amber-400 text-white hover:bg-amber-500';
+                        
+                        if(btn.className !== baseClass) btn.className = baseClass;
+                        
+                        if (status === 2) {
+                            const inner = `${i} <span class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white font-bold ring-2 ring-white">+1</span>`;
+                            if(btn.innerHTML !== inner) btn.innerHTML = inner;
                         } else {
-                            // Aguarda 250ms para ver se é só 1 clique
-                            clickTimeout = setTimeout(() => {
-                                clickTimeout = null;
-                                if (status === 0) figurinhasSalvas[key] = 1; 
-                                else if (status === 1) figurinhasSalvas[key] = 0;
-                                else if (status === 2) figurinhasSalvas[key] = 0; // Desmarca repetida
-                                salvarDadosNoBanco();
-                            }, 250);
+                            if(btn.innerHTML !== String(i)) btn.innerHTML = i;
                         }
-                    });
-
-                    grid.appendChild(btn);
+                    }
                 }
 
-                // Se não tem repetida e o filtro tá ativo, não renderiza a sessão
-                if (modoOrdenacao === 'repetidas' && gridRenderizadoEmpty) return;
+                const counter = document.getElementById(`counter-${selecao.originalId}`);
+                if (counter) {
+                    const totalDestaSelecao = (selecao.end - selecao.start) + 1;
+                    const txt = `${preenchidasLocal}/${totalDestaSelecao}`;
+                    if(counter.textContent !== txt) counter.textContent = txt;
+                }
 
-                const qtdPreenchidas = contarPreenchidas(selecao);
-                const titleContainer = document.createElement('div');
-                titleContainer.className = 'flex justify-between items-center mb-3 ml-1 border-b border-slate-200 pb-1';
-                
-                const title = document.createElement('h2');
-                title.className = 'text-sm font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2';
-                
-                const imgFlag = document.createElement('img');
-                imgFlag.src = window.getBandeiraUrl(selecao.id);
-                imgFlag.alt = selecao.nome;
-                imgFlag.className = 'w-5 h-3.5 object-cover rounded shadow-sm';
-                imgFlag.onerror = () => imgFlag.style.display = 'none';
-                
-                const spanName = document.createElement('span');
-                spanName.textContent = selecao.nome;
-                title.appendChild(imgFlag);
-                title.appendChild(spanName);
-
-                const counter = document.createElement('span');
-                counter.className = 'text-xs font-semibold text-slate-400';
-                counter.textContent = `${qtdPreenchidas}/${totalDestaSelecao}`;
-                
-                titleContainer.appendChild(title);
-                titleContainer.appendChild(counter);
-                section.appendChild(titleContainer);
-                section.appendChild(grid);
-                container.appendChild(section);
+                const section = document.getElementById(`section-${selecao.originalId}`);
+                if (section) {
+                    if (modoOrdenacao === 'repetidas') {
+                        section.style.display = temRepetidaAqui ? 'block' : 'none';
+                    } else {
+                        section.style.display = 'block';
+                    }
+                }
             });
 
-            if (modoOrdenacao === 'repetidas' && countRepetidas === 0) {
-                container.innerHTML = `<div class="text-center text-slate-400 mt-20 p-6 bg-white rounded-xl shadow-sm border border-slate-100 max-w-lg mx-auto"><h2 class="text-xl font-bold text-slate-700 mb-2">Nenhuma Repetida</h2><p>Você ainda não marcou nenhuma figurinha como repetida neste álbum.</p></div>`;
-            }
-
-            // Atualiza Estatísticas do Menu
+            // Atualiza Top Menu Estatísticas
             const percentual = totalFigurinhas === 0 ? 0 : Math.round((countTemos / totalFigurinhas) * 100);
             document.getElementById('progress-percent').textContent = `${percentual}%`;
             document.getElementById('stat-faltando').textContent = countFaltando;
             document.getElementById('stat-temos').textContent = countTemos;
             document.getElementById('stat-repetidas').textContent = countRepetidas;
-        }
 
+            const emptyMsg = document.getElementById('empty-msg');
+            if(emptyMsg) {
+                emptyMsg.style.display = (modoOrdenacao === 'repetidas' && countRepetidas === 0) ? 'block' : 'none';
+            }
+        };
+
+        // MENSAGEM NO WHATSAPP COM EMOJIS E FORMATO ESPECÍFICO
         window.compartilharWhatsApp = () => {
             if (selecoes.length === 0) return alert("Álbum vazio!");
             
-            const modoOrdenacao = document.getElementById('sort-select').value;
-            const isModoRepetidas = (modoOrdenacao === 'repetidas');
-            const nomeProjeto = document.getElementById('album-title-display').textContent;
-            
-            let text = isModoRepetidas 
-                ? `⚽ Olá! Tenho essas figurinhas REPETIDAS do álbum "${nomeProjeto}" para trocar:\n\n*REPETIDAS:*\n`
-                : `⚽ Olá! Estou completando meu álbum "${nomeProjeto}". Alguém tem essas para trocar?\n\n*FALTAM:*\n`;
-                
-            let achouAlguma = 0;
+            let textFaltam = "";
+            let textRepetidas = "";
+            let faltamTotal = 0;
+            let repetidasTotal = 0;
 
             selecoes.forEach(selecao => {
-                let listArray = [];
+                let missing = [];
+                let repeated = [];
                 for (let i = selecao.start; i <= selecao.end; i++) {
                     const key = `${selecao.originalId}-${i}`;
                     const status = figurinhasSalvas[key] || 0;
-                    
-                    if (isModoRepetidas) {
-                        if (status === 2) { listArray.push(i); achouAlguma++; }
-                    } else {
-                        if (status === 0) { listArray.push(i); achouAlguma++; }
-                    }
+                    if (status === 0) { missing.push(i); faltamTotal++; }
+                    else if (status === 2) { repeated.push(i); repetidasTotal++; }
                 }
-                if (listArray.length > 0) text += `*${selecao.nome}*: ${listArray.join(', ')}\n`;
+                
+                const emoji = window.emojiMap[selecao.originalId] || '⚽';
+                const label = `${emoji} *${selecao.nome} (${selecao.originalId})*`;
+
+                if (missing.length > 0) textFaltam += `${label}: ${missing.join(', ')}\n`;
+                if (repeated.length > 0) textRepetidas += `${label}: ${repeated.join(', ')}\n`;
             });
+
+            let finalMsg = `Olá! Estou completando meu álbum da Copa do Mundo 2026. Preciso das seguintes figurinhas:\n\n`;
             
-            if (achouAlguma === 0) return alert(isModoRepetidas ? "Você não tem repetidas!" : "Álbum 100% completo!");
-            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+            if (faltamTotal > 0) {
+                finalMsg += textFaltam + `\n`;
+            } else {
+                finalMsg += `*NENHUMA! Álbum 100% completo!*\n\n`;
+            }
+
+            finalMsg += `Tenho essas repetidas:\n`;
+            if (repetidasTotal > 0) {
+                finalMsg += textRepetidas;
+            } else {
+                finalMsg += `*Nenhuma repetida no momento.*`;
+            }
+
+            window.open(`https://wa.me/?text=${encodeURIComponent(finalMsg.trim())}`, '_blank');
         };
     </script>
 </body>
