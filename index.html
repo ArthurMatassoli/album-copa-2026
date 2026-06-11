@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Álbum Copa 2026</title>
+    <title>Álbum Copa 2026 - Colaborativo</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .no-context { -webkit-touch-callout: none; user-select: none; }
@@ -21,7 +21,7 @@
         <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-100 my-auto">
             <div class="text-center mb-8">
                 <h1 class="text-3xl font-extrabold text-indigo-900 tracking-tight mb-2">Álbum 2026</h1>
-                <p class="text-slate-500 text-sm" id="auth-subtitle">Crie sua conta para acessar os projetos.</p>
+                <p class="text-slate-500 text-sm" id="auth-subtitle">Faça login ou cadastre-se para acessar.</p>
             </div>
 
             <form id="auth-form" class="space-y-4">
@@ -44,9 +44,7 @@
                 <div>
                     <div class="flex justify-between items-end mb-1">
                         <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Senha</label>
-                        <button type="button" id="forgot-password-btn" onclick="recuperarSenha()" class="text-xs font-bold text-indigo-600 hover:underline focus:outline-none" style="display: none;">
-                            Esqueci a senha
-                        </button>
+                        <button type="button" onclick="recuperarSenha()" class="text-xs font-bold text-indigo-600 hover:underline focus:outline-none">Esqueci a senha</button>
                     </div>
                     <input type="password" id="auth-password" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500 transition">
                 </div>
@@ -73,11 +71,11 @@
     <div id="dashboard-screen" class="hidden flex-1 p-4 fade-in max-w-5xl mx-auto w-full pt-10">
         <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 border-b border-slate-200 pb-4">
             <div>
-                <h2 class="text-3xl font-extrabold text-indigo-900 tracking-tight">Meus Projetos</h2>
+                <h2 class="text-3xl font-extrabold text-indigo-900 tracking-tight">Meus Álbuns</h2>
                 <p class="text-sm text-slate-500 mt-1" id="dash-user-email"></p>
             </div>
             <div class="flex gap-3">
-                <button onclick="criarNovoProjeto()" class="bg-indigo-600 text-white px-5 py-2.5 rounded-lg font-bold text-sm shadow hover:bg-indigo-700 transition transform active:scale-95">
+                <button onclick="abrirModalNovoProjeto()" class="bg-indigo-600 text-white px-5 py-2.5 rounded-lg font-bold text-sm shadow hover:bg-indigo-700 transition transform active:scale-95">
                     + Novo Álbum
                 </button>
                 <button onclick="logout()" class="bg-white border border-slate-300 text-slate-600 px-5 py-2.5 rounded-lg font-bold text-sm hover:bg-slate-50 transition">
@@ -85,17 +83,12 @@
                 </button>
             </div>
         </div>
-
-        <div id="projects-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            <p class="text-slate-400 col-span-full">Carregando projetos...</p>
-        </div>
+        <div id="projects-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
     </div>
 
     <div id="app-screen" class="hidden fade-in pb-10">
-        
         <header class="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-sm">
             <div class="max-w-5xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-3">
-                
                 <div class="flex items-center gap-3">
                     <button onclick="voltarDashboard()" class="text-slate-400 hover:text-indigo-600 transition p-1 bg-slate-100 rounded-lg">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
@@ -110,11 +103,16 @@
                         <option value="preenchidas">Mais Preenchidas</option>
                     </select>
 
-                    <button onclick="document.getElementById('csv-upload').click()" class="text-indigo-600 hover:bg-indigo-50 text-sm font-semibold transition flex items-center bg-white border border-slate-200 py-1.5 px-3 rounded-md shadow-sm">
+                    <button type="button" onclick="document.getElementById('csv-upload').click()" class="cursor-pointer text-indigo-600 hover:bg-indigo-50 text-sm font-semibold transition flex items-center bg-white border border-slate-200 py-1.5 px-3 rounded-md shadow-sm">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                        <span>Importar CSV</span>
+                        <span class="hidden sm:inline">Importar CSV</span>
                     </button>
-                    <input type="file" id="csv-upload" accept=".csv" class="absolute opacity-0 pointer-events-none w-0 h-0">
+                    <input type="file" id="csv-upload" accept=".csv" style="display: none;">
+
+                    <button onclick="gerarLinkConvite()" class="text-blue-600 hover:bg-blue-50 border border-blue-200 text-sm font-semibold transition flex items-center bg-white py-1.5 px-3 rounded-md shadow-sm">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+                        <span class="hidden md:inline">Convidar</span>
+                    </button>
 
                     <button onclick="compartilharWhatsApp()" class="text-green-700 hover:bg-green-50 text-sm font-semibold transition flex items-center bg-white border border-green-200 py-1.5 px-3 rounded-md shadow-sm">
                         <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
@@ -126,12 +124,12 @@
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                         </button>
                         <div class="absolute right-0 mt-2 w-64 bg-white border border-slate-100 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 p-4 transform origin-top-right">
-                            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Seu Progresso</h3>
+                            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Progresso do Álbum</h3>
                             <div class="flex items-end gap-2 mb-1"><span id="progress-percent" class="text-3xl font-black text-indigo-600">0%</span></div>
                             <p id="progress-text" class="text-sm text-slate-500 mb-3">0 de 0 figurinhas</p>
                             <div class="space-y-2 text-xs text-slate-600 border-t pt-3">
                                 <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-white border border-slate-300"></div> Faltando</div>
-                                <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-indigo-500"></div> Tenho</div>
+                                <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-indigo-500"></div> Temos</div>
                                 <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-amber-400"></div> Repetida</div>
                             </div>
                         </div>
@@ -143,10 +141,22 @@
         <main class="max-w-5xl mx-auto mt-6 sm:mt-8 px-4" id="album-container"></main>
     </div>
 
+    <div id="modal-novo-projeto" class="fixed inset-0 bg-slate-900 bg-opacity-50 flex justify-center items-center z-50 hidden fade-in">
+        <div class="bg-white w-full max-w-sm rounded-xl shadow-2xl p-6 m-4">
+            <h2 class="text-xl font-bold text-indigo-900 mb-4">Criar Novo Álbum</h2>
+            <input type="text" id="novo-nome" placeholder="Nome (Ex: Álbum da Família)" class="w-full border rounded-lg p-2 mb-3 outline-none focus:ring-2 focus:ring-indigo-500">
+            <input type="password" id="nova-senha" placeholder="Senha do Álbum (Opcional)" class="w-full border rounded-lg p-2 mb-4 outline-none focus:ring-2 focus:ring-indigo-500">
+            <div class="flex justify-end gap-2">
+                <button onclick="fecharModalNovoProjeto()" class="px-4 py-2 text-slate-500 hover:bg-slate-100 rounded-lg transition">Cancelar</button>
+                <button onclick="confirmarNovoProjeto()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition">Criar Álbum</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, collection, addDoc, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyB9vc7dUgXZOmF5LIiPeGgbXwfvLztZAWI", 
@@ -168,8 +178,13 @@
         let selecoes = [];
         let figurinhasSalvas = {};
 
+        // Checar se a pessoa abriu um Link de Convite
+        const urlParams = new URLSearchParams(window.location.search);
+        let pendingJoinId = urlParams.get('join');
+
+        // MAPA DE BANDEIRAS
         window.getBandeiraUrl = (code) => {
-            const exemplosReais = {
+            const flags = {
                 'FWC_1': 'https://upload.wikimedia.org/wikipedia/pt/2/23/Logotipo_da_Copa_do_Mundo_FIFA_de_2026.png',
                 'CC': 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Coca-Cola_logo.svg/200px-Coca-Cola_logo.svg.png',
                 'MEX': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Flag_of_Mexico.svg/200px-Flag_of_Mexico.svg.png',
@@ -178,7 +193,7 @@
                 'CZE': 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Flag_of_the_Czech_Republic.svg/200px-Flag_of_the_Czech_Republic.svg.png',
                 'DEFAULT': `flags/${code}.png`
             };
-            return exemplosReais[code] || exemplosReais['DEFAULT'];
+            return flags[code] || flags['DEFAULT'];
         };
 
         const ordemDaFoto = [
@@ -191,8 +206,9 @@
             'FWC_2', 'CC'
         ];
 
+        // GERA A ESTRUTURA OFICIAL 2026 AUTOMATICAMENTE
         function gerarSelecoesPadrao() {
-            const nomesTraduzidos = {
+            const nomes = {
                 'MEX': 'México', 'RSA': 'África do Sul', 'KOR': 'Coreia do Sul', 'CZE': 'República Tcheca',
                 'CAN': 'Canadá', 'BIH': 'Bósnia e Herzegovina', 'QAT': 'Catar', 'SUI': 'Suíça',
                 'BRA': 'Brasil', 'MAR': 'Marrocos', 'HAI': 'Haiti', 'SCO': 'Escócia',
@@ -211,26 +227,33 @@
                 if (id === 'FWC_1') return { id: 'FWC_1', originalId: 'FWC', nome: 'FWC (1 ao 8)', start: 1, end: 8, leituraIndex: index };
                 if (id === 'FWC_2') return { id: 'FWC_2', originalId: 'FWC', nome: 'FWC (9 ao 19)', start: 9, end: 19, leituraIndex: index };
                 if (id === 'CC') return { id: 'CC', originalId: 'CC', nome: 'Coca-Cola', start: 1, end: 14, leituraIndex: index };
-                return { id: id, originalId: id, nome: nomesTraduzidos[id] || id, start: 1, end: 20, leituraIndex: index };
+                return { id: id, originalId: id, nome: nomes[id] || id, start: 1, end: 20, leituraIndex: index };
             });
         }
 
         // -------------------------
-        // GERENCIAMENTO DE TELAS E AUTH
+        // FLUXO DE LOGIN E CONVITE
         // -------------------------
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
                 document.getElementById('auth-screen').style.display = 'none';
-                document.getElementById('app-screen').style.display = 'none';
-                document.getElementById('dashboard-screen').style.display = 'block';
-                document.getElementById('dash-user-email').textContent = `Conectado como: ${user.email}`;
-                ouvirProjetosLista();
+                document.getElementById('dash-user-email').textContent = `Logado como: ${user.email}`;
+                
+                if (pendingJoinId) {
+                    await tentarEntrarNoProjeto(pendingJoinId);
+                    pendingJoinId = null; 
+                    window.history.replaceState({}, document.title, window.location.pathname); 
+                } else {
+                    document.getElementById('dashboard-screen').style.display = 'block';
+                    ouvirProjetosLista();
+                }
             } else {
                 document.getElementById('dashboard-screen').style.display = 'none';
                 document.getElementById('app-screen').style.display = 'none';
                 document.getElementById('auth-screen').style.display = 'flex';
-                if(window.unsubscribeProjetos) window.unsubscribeProjetos();
-                if(window.unsubscribeAlbum) window.unsubscribeAlbum();
+                if(pendingJoinId) {
+                    document.getElementById('auth-subtitle').innerHTML = "<span class='text-indigo-600 font-bold'>Você foi convidado para um Álbum!</span> Crie sua conta ou faça login para aceitar.";
+                }
             }
         });
 
@@ -241,6 +264,8 @@
             document.getElementById('confirm-password-container').style.display = window.isSignup ? 'block' : 'none';
             document.getElementById('forgot-password-btn').style.display = window.isSignup ? 'none' : 'block';
             document.getElementById('auth-submit-btn').textContent = window.isSignup ? 'Cadastrar e Entrar' : 'Entrar';
+            document.getElementById('auth-toggle-text').textContent = window.isSignup ? 'Já tem uma conta?' : 'Ainda não tem conta?';
+            document.getElementById('auth-toggle-btn').textContent = window.isSignup ? 'Fazer Login' : 'Cadastrar';
             document.getElementById('auth-name').required = window.isSignup;
             document.getElementById('auth-phone').required = window.isSignup;
             document.getElementById('auth-confirm-password').required = window.isSignup;
@@ -255,15 +280,11 @@
 
             try {
                 if (window.isSignup) {
-                    const confPass = document.getElementById('auth-confirm-password').value;
-                    const nome = document.getElementById('auth-name').value;
-                    const telefone = document.getElementById('auth-phone').value;
-                    if (pass !== confPass) throw new Error("As senhas não coincidem.");
-                    
+                    if (pass !== document.getElementById('auth-confirm-password').value) throw new Error("As senhas não coincidem.");
                     const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
                     await setDoc(doc(db, "users", userCredential.user.uid), {
-                        nome: nome,
-                        telefone: telefone,
+                        nome: document.getElementById('auth-name').value,
+                        telefone: document.getElementById('auth-phone').value,
                         email: email,
                         criadoEm: serverTimestamp()
                     });
@@ -271,7 +292,7 @@
                     await signInWithEmailAndPassword(auth, email, pass);
                 }
             } catch (error) {
-                errorMsg.textContent = error.message;
+                errorMsg.textContent = error.message.includes("coincidem") ? error.message : "Credenciais inválidas ou e-mail em uso.";
                 errorMsg.classList.remove('hidden');
             }
         });
@@ -279,42 +300,115 @@
         window.logout = () => signOut(auth);
 
         // -------------------------
-        // FLUXO DO DASHBOARD
+        // GESTÃO DE PROJETOS E CONVITES
         // -------------------------
         function ouvirProjetosLista() {
             window.unsubscribeProjetos = onSnapshot(collection(db, "projetos_album"), (snapshot) => {
                 const list = document.getElementById('projects-list');
                 list.innerHTML = '';
-                if(snapshot.empty) {
-                    list.innerHTML = `<div class="col-span-full text-center py-10"><p class="text-slate-400">Nenhum álbum criado. Comece clicando em + Novo Álbum!</p></div>`;
-                    return;
-                }
+                const myEmail = auth.currentUser.email;
+                let encontrou = false;
+
                 snapshot.forEach(docSnap => {
                     const data = docSnap.data();
-                    list.innerHTML += `
-                        <div onclick="abrirProjeto('${docSnap.id}', '${data.nomeProjeto || 'Sem Nome'}')" class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg cursor-pointer transition transform hover:-translate-y-1">
-                            <h3 class="font-extrabold text-lg text-slate-800 truncate">${data.nomeProjeto}</h3>
-                            <p class="text-xs font-semibold text-slate-400 mt-2">${data.selecoes ? data.selecoes.length : 0} Seleções Carregadas</p>
-                        </div>
-                    `;
+                    const souDono = data.owner === myEmail;
+                    const souConvidado = data.guests && data.guests.includes(myEmail);
+
+                    if (souDono || souConvidado) {
+                        encontrou = true;
+                        const roleTag = souDono ? '<span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold">Dono</span>' : '<span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded font-bold">Convidado</span>';
+                        
+                        list.innerHTML += `
+                            <div onclick="abrirProjeto('${docSnap.id}', '${data.nomeProjeto}')" class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg cursor-pointer transition transform hover:-translate-y-1">
+                                <div class="flex justify-between items-start mb-3">
+                                    <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477-4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                                    </div>
+                                    ${roleTag}
+                                </div>
+                                <h3 class="font-extrabold text-lg text-slate-800 truncate">${data.nomeProjeto}</h3>
+                                <p class="text-xs font-semibold text-slate-400 mt-1">${(data.guests ? data.guests.length : 0) + 1} Participantes</p>
+                            </div>
+                        `;
+                    }
                 });
+
+                if(!encontrou) {
+                    list.innerHTML = `<div class="col-span-full text-center py-10"><p class="text-slate-400">Nenhum álbum encontrado. Crie o seu primeiro projeto!</p></div>`;
+                }
             });
         }
 
-        window.criarNovoProjeto = async () => {
-            const nome = prompt("Nome do Álbum:");
-            if (!nome || nome.trim() === "") return;
+        window.abrirModalNovoProjeto = () => document.getElementById('modal-novo-projeto').classList.remove('hidden');
+        window.fecharModalNovoProjeto = () => document.getElementById('modal-novo-projeto').classList.add('hidden');
+
+        window.confirmarNovoProjeto = async () => {
+            const nome = document.getElementById('novo-nome').value;
+            const senha = document.getElementById('nova-senha').value;
+            if (!nome || nome.trim() === "") return alert("Dê um nome ao álbum.");
+
             try {
                 await addDoc(collection(db, "projetos_album"), {
                     nomeProjeto: nome,
-                    criador: auth.currentUser.email,
-                    selecoes: gerarSelecoesPadrao(), // Cria com a ordem FWC inicial/final embutida
+                    owner: auth.currentUser.email,
+                    guests: [],
+                    senha: senha || null, 
+                    selecoes: gerarSelecoesPadrao(),
                     figurinhasSalvas: {},
                     criadoEm: serverTimestamp()
                 });
-            } catch (e) { alert(e.message); }
+                window.fecharModalNovoProjeto();
+                document.getElementById('novo-nome').value = '';
+                document.getElementById('nova-senha').value = '';
+            } catch (e) { alert("Erro: " + e.message); }
         };
 
+        async function tentarEntrarNoProjeto(id) {
+            const ref = doc(db, "projetos_album", id);
+            const snap = await getDoc(ref);
+            
+            if (!snap.exists()) {
+                alert("Este link de convite é inválido ou o álbum foi excluído.");
+                document.getElementById('dashboard-screen').style.display = 'block';
+                ouvirProjetosLista();
+                return;
+            }
+
+            const data = snap.data();
+            const myEmail = auth.currentUser.email;
+
+            if (data.owner === myEmail || (data.guests && data.guests.includes(myEmail))) {
+                abrirProjeto(id, data.nomeProjeto);
+                return;
+            }
+
+            if (data.senha) {
+                const digitou = prompt(`O álbum "${data.nomeProjeto}" exige senha para entrar:`);
+                if (digitou !== data.senha) {
+                    alert("Senha incorreta!");
+                    document.getElementById('dashboard-screen').style.display = 'block';
+                    ouvirProjetosLista();
+                    return;
+                }
+            }
+
+            await updateDoc(ref, { guests: arrayUnion(myEmail) });
+            alert("Você entrou no álbum com sucesso!");
+            abrirProjeto(id, data.nomeProjeto);
+        }
+
+        window.gerarLinkConvite = () => {
+            const link = `${window.location.origin}${window.location.pathname}?join=${window.currentProjectId}`;
+            navigator.clipboard.writeText(link).then(() => {
+                alert("Link de convite copiado!\n\nEnvie para seus amigos. Eles entrarão neste álbum.");
+            }).catch(() => {
+                alert("Copie este link para enviar: \n" + link);
+            });
+        };
+
+        // -------------------------
+        // RENDERIZAÇÃO E EDIÇÃO DO ÁLBUM
+        // -------------------------
         window.abrirProjeto = (projectId, projectName) => {
             window.currentProjectId = projectId;
             document.getElementById('dashboard-screen').style.display = 'none';
@@ -341,28 +435,27 @@
 
         async function salvarDadosNoBanco() {
             if (!window.currentProjectId) return;
-            await setDoc(doc(db, "projetos_album", window.currentProjectId), {
-                selecoes: selecoes,
+            await updateDoc(doc(db, "projetos_album", window.currentProjectId), {
                 figurinhasSalvas: figurinhasSalvas
-            }, { merge: true });
+            });
         }
 
-        // -------------------------
-        // PARSER E IMPORTAÇÃO DO CSV (MOBILE REPARADO)
-        // -------------------------
+        // CSV MOBILE BLINDADO (Carrega no banco e ignora estrutura de projeto anterior)
         document.getElementById('csv-upload').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(evt) { processarCSV(evt.target.result); };
+            reader.onload = function(evt) { 
+                processarCSV(evt.target.result); 
+                e.target.value = ''; // Permite subir o mesmo arquivo de novo se errar
+            };
             reader.readAsText(file);
         });
 
         function processarCSV(csvText) {
             const lines = csvText.replace(/\r/g, '').split('\n');
             let newState = {};
-            let newSelecoes = [];
-
+            
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i].trim();
                 if (!line) continue;
@@ -371,45 +464,27 @@
                 if (!selecaoId || ['seleções', 'total'].includes(selecaoId.toLowerCase())) continue;
 
                 if (selecaoId === 'FWC') {
-                    if (!newSelecoes.find(s => s.id === 'FWC_1')) newSelecoes.push({ id: 'FWC_1', originalId: 'FWC', nome: 'FWC (1 ao 8)', start: 1, end: 8, leituraIndex: newSelecoes.length });
-                    if (!newSelecoes.find(s => s.id === 'FWC_2')) newSelecoes.push({ id: 'FWC_2', originalId: 'FWC', nome: 'FWC (9 ao 19)', start: 9, end: 19, leituraIndex: newSelecoes.length });
                     for (let j = 1; j <= 19; j++) {
-                        if (['true', 'verdadeiro', '1'].includes(cols[j + 1] ? cols[j + 1].trim().toLowerCase() : '')) newState[`FWC-${j}`] = 1; 
-                    }
-                } else {
-                    let maxFigurinhas = 0;
-                    for (let j = 1; j <= 50; j++) {
-                        if (cols[j + 1] !== undefined && cols[j + 1].trim() !== '') {
-                            if (['true', 'false', 'verdadeiro', 'falso', '0', '1'].includes(cols[j + 1].trim().toLowerCase())) maxFigurinhas = Math.max(maxFigurinhas, j);
+                        if (['true', 'verdadeiro', '1'].includes(cols[j + 1] ? cols[j + 1].trim().toLowerCase() : '')) {
+                            newState[`FWC-${j}`] = 1; 
                         }
                     }
-                    if (maxFigurinhas > 0) {
-                        newSelecoes.push({ id: selecaoId, originalId: selecaoId, nome: selecaoId, start: 1, end: maxFigurinhas, leituraIndex: newSelecoes.length });
-                        for (let j = 1; j <= maxFigurinhas; j++) {
-                            if (['true', 'verdadeiro', '1'].includes(cols[j + 1] ? cols[j + 1].trim().toLowerCase() : '')) newState[`${selecaoId}-${j}`] = 1; 
+                } else {
+                    for (let j = 1; j <= 50; j++) {
+                        if (cols[j + 1] !== undefined && cols[j + 1].trim() !== '') {
+                            if (['true', 'verdadeiro', '1'].includes(cols[j + 1].trim().toLowerCase())) {
+                                newState[`${selecaoId}-${j}`] = 1; 
+                            }
                         }
                     }
                 }
             }
-
-            if (newSelecoes.length > 0) {
-                // Alinha os índices de ordenação com o padrão visual
-                newSelecoes.forEach(s => {
-                    let idx = ordemDaFoto.indexOf(s.id);
-                    s.leituraIndex = idx !== -1 ? idx : 999;
-                });
-                selecoes = newSelecoes;
-                figurinhasSalvas = newState;
-                salvarDadosNoBanco();
-                alert(`Sucesso! Álbum atualizado via celular.`);
-            } else {
-                alert('Erro na leitura da planilha. Certifique-se de escolher um .csv válido.');
-            }
+            
+            figurinhasSalvas = newState;
+            salvarDadosNoBanco();
+            alert(`Sucesso! Planilha processada e álbum atualizado.`);
         }
 
-        // -------------------------
-        // RENDERIZAÇÃO DO ÁLBUM
-        // -------------------------
         function contarPreenchidas(selecao) {
             let count = 0;
             for (let i = selecao.start; i <= selecao.end; i++) {
@@ -501,6 +576,7 @@
                         isLongPress = false;
                         pressTimer = setTimeout(() => {
                             isLongPress = true;
+                            if(navigator.vibrate) navigator.vibrate(50);
                             figurinhasSalvas[key] = (status === 2) ? 0 : 2;
                             salvarDadosNoBanco();
                         }, 500);
