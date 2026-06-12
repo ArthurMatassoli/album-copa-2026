@@ -113,7 +113,6 @@
                         <option value="repetidas">Só Repetidas</option>
                     </select>
 
-                    <!-- Importação de CSV / TXT com botão escondido -->
                     <input type="file" id="csv-file-input" class="hidden" accept=".csv, .txt" onchange="importarCSV(event)">
                     <button onclick="triggerCSV()" class="text-purple-600 hover:bg-purple-50 border border-purple-200 text-sm font-semibold transition flex items-center bg-white py-1.5 px-3 rounded-md shadow-sm">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
@@ -130,7 +129,7 @@
                         <span class="hidden md:inline">Trocar</span>
                     </button>
 
-                    <!-- Botão de Editar Projeto (Visível só para Dono) -->
+                    <!-- Botão de Editar Projeto -->
                     <button id="btn-editar-projeto" onclick="abrirModalEditarProjeto()" class="hidden p-2 text-slate-500 hover:bg-slate-100 rounded-md transition outline-none" title="Editar Álbum">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                     </button>
@@ -183,14 +182,22 @@
     <!-- Modal Editar Projeto -->
     <div id="modal-editar-projeto" class="fixed inset-0 bg-slate-900 bg-opacity-50 flex justify-center items-center z-50 hidden fade-in">
         <div class="bg-white w-full max-w-sm rounded-xl shadow-2xl p-6 m-4">
-            <h2 class="text-xl font-bold text-indigo-900 mb-4">Editar Álbum</h2>
+            <h2 class="text-xl font-bold text-indigo-900 mb-4">Gerenciar Álbum</h2>
+            
             <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Nome do Álbum</label>
             <input type="text" id="editar-nome" class="w-full border rounded-lg p-2 mb-3 outline-none focus:ring-2 focus:ring-indigo-500">
+            
             <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Senha (Deixe em branco para remover)</label>
             <input type="password" id="editar-senha" class="w-full border rounded-lg p-2 mb-4 outline-none focus:ring-2 focus:ring-indigo-500">
-            <div class="flex justify-end gap-2">
-                <button onclick="fecharModalEditarProjeto()" class="px-4 py-2 text-slate-500 hover:bg-slate-100 rounded-lg transition">Cancelar</button>
-                <button onclick="confirmarEdicaoProjeto()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition">Salvar Edição</button>
+            
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Participantes (Convidados)</label>
+            <div id="lista-participantes" class="max-h-32 overflow-y-auto mb-5 border border-slate-200 rounded p-2 bg-slate-50 space-y-1">
+                <!-- Lista de convidados será injetada aqui -->
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                <button onclick="fecharModalEditarProjeto()" class="px-4 py-2 text-slate-500 hover:bg-slate-100 rounded-lg transition font-semibold">Cancelar</button>
+                <button onclick="confirmarEdicaoProjeto()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition">Salvar Alterações</button>
             </div>
         </div>
     </div>
@@ -216,7 +223,8 @@
 
         window.isSignup = true;
         window.currentProjectId = null;
-        window.currentProjectData = null; // Para armazenar os dados do projeto aberto
+        window.currentProjectData = null; 
+        window.meusProjetos = {}; // Para armazenar todos os dados carregados na dashboard
         window.unsubscribeAlbum = null;
         window.unsubscribeProjetos = null;
         window.lastSortMode = null;
@@ -382,18 +390,18 @@
                     const souConvidado = data.guests && data.guests.includes(myEmail);
                     const removidoPorMim = data.removedBy && data.removedBy.includes(myEmail);
 
+                    // Atualiza a memória global para edição rápida do dash
+                    window.meusProjetos[docSnap.id] = data;
+
                     if ((souDono || souConvidado) && !removidoPorMim) {
                         encontrou = true;
                         const roleTag = souDono ? '<span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold">Dono</span>' : '<span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded font-bold">Convidado</span>';
                         
-                        // Escapar aspas para evitar quebrar o HTML
                         const safeNome = data.nomeProjeto.replace(/'/g, "\\'");
-                        const safeSenha = data.senha ? data.senha.replace(/'/g, "\\'") : '';
 
-                        // Botão de Editar na Dashboard, apenas se for dono
                         const btnEdit = souDono ? `
-                            <button onclick="abrirEdicaoDoDash(event, '${docSnap.id}', '${safeNome}', '${safeSenha}')" class="text-slate-300 hover:text-indigo-500 p-1 transition rounded-full hover:bg-indigo-50" title="Editar Álbum">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            <button onclick="abrirEdicaoDoDash(event, '${docSnap.id}')" class="text-slate-300 hover:text-indigo-500 p-1 transition rounded-full hover:bg-indigo-50" title="Gerenciar Álbum">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                             </button>
                         ` : '';
                         
@@ -408,7 +416,7 @@
                                     </div>
                                     <div class="flex gap-1">
                                         ${btnEdit}
-                                        <button onclick="removerProjeto(event, '${docSnap.id}', '${safeNome}')" class="text-slate-300 hover:text-red-500 p-1 transition rounded-full hover:bg-red-50" title="Remover da conta">
+                                        <button onclick="removerProjeto(event, '${docSnap.id}', '${safeNome}')" class="text-slate-300 hover:text-red-500 p-1 transition rounded-full hover:bg-red-50" title="Ocultar da minha conta">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                         </button>
                                     </div>
@@ -517,21 +525,65 @@
         };
 
         // -------------------------
-        // EDIÇÃO DO PROJETO
+        // EDIÇÃO DO PROJETO E PARTICIPANTES
         // -------------------------
-        window.abrirEdicaoDoDash = (event, id, nome, senha) => {
+        window.abrirEdicaoDoDash = (event, id) => {
             event.stopPropagation();
             window.currentProjectId = id;
-            document.getElementById('editar-nome').value = nome;
-            document.getElementById('editar-senha').value = senha === 'undefined' || senha === 'null' ? '' : senha;
+            window.currentProjectData = window.meusProjetos[id];
+            preencherCamposDeEdicao();
             document.getElementById('modal-editar-projeto').classList.remove('hidden');
         };
 
         window.abrirModalEditarProjeto = () => {
             if (!window.currentProjectData) return;
+            preencherCamposDeEdicao();
+            document.getElementById('modal-editar-projeto').classList.remove('hidden');
+        };
+
+        function preencherCamposDeEdicao() {
             document.getElementById('editar-nome').value = window.currentProjectData.nomeProjeto || '';
             document.getElementById('editar-senha').value = window.currentProjectData.senha || '';
-            document.getElementById('modal-editar-projeto').classList.remove('hidden');
+            renderizarListaParticipantes();
+        }
+
+        window.renderizarListaParticipantes = () => {
+            const container = document.getElementById('lista-participantes');
+            container.innerHTML = '';
+            const guests = window.currentProjectData.guests || [];
+            
+            if (guests.length === 0) {
+                container.innerHTML = '<p class="text-xs text-slate-400 italic text-center p-2">Você é o único neste álbum até o momento.</p>';
+                return;
+            }
+            
+            guests.forEach(guest => {
+                container.innerHTML += `
+                    <div class="flex justify-between items-center bg-white p-2 rounded shadow-sm border border-slate-100">
+                        <span class="text-sm text-slate-600 truncate mr-2 font-semibold" title="${guest}">${guest}</span>
+                        <button type="button" onclick="removerParticipante('${guest}')" class="text-xs font-bold bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition px-2 py-1 rounded">Remover</button>
+                    </div>
+                `;
+            });
+        };
+
+        window.removerParticipante = async (email) => {
+            const confirmar = confirm(`Tem certeza que deseja remover ${email}?\nEsta pessoa não terá mais acesso a este álbum.`);
+            if (!confirmar) return;
+
+            try {
+                await updateDoc(doc(db, "projetos_album", window.currentProjectId), {
+                    guests: arrayRemove(email)
+                });
+                
+                // Remove localmente para já dar a resposta visual imediata no modal
+                if (window.currentProjectData && window.currentProjectData.guests) {
+                    window.currentProjectData.guests = window.currentProjectData.guests.filter(g => g !== email);
+                }
+                renderizarListaParticipantes();
+            } catch(e) {
+                alert("Erro ao remover usuário: " + e.message);
+            }
         };
 
         window.fecharModalEditarProjeto = () => {
@@ -550,9 +602,8 @@
                     senha: novaSenha || null
                 });
                 window.fecharModalEditarProjeto();
-                alert("Álbum atualizado com sucesso!");
             } catch (e) { 
-                alert("Erro ao atualizar: " + e.message); 
+                alert("Erro ao salvar alterações: " + e.message); 
             }
         };
 
@@ -659,13 +710,12 @@
             window.unsubscribeAlbum = onSnapshot(doc(db, "projetos_album", projectId), (docSnap) => {
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    window.currentProjectData = data; // Guardamos os dados localmente
+                    window.currentProjectData = data; 
                     
                     document.getElementById('album-title-display').textContent = data.nomeProjeto;
                     selecoes = data.selecoes || [];
                     figurinhasSalvas = data.figurinhasSalvas || {};
 
-                    // Exibe o botão de edição se for o dono
                     if (data.owner === auth.currentUser.email) {
                         document.getElementById('btn-editar-projeto').classList.remove('hidden');
                     } else {
@@ -673,6 +723,12 @@
                     }
 
                     renderizarAlbum(); 
+                    
+                    // Se o modal de edição estiver aberto para o dono, recarrega a lista para refletir novas entradas
+                    const modalEdicao = document.getElementById('modal-editar-projeto');
+                    if (!modalEdicao.classList.contains('hidden')) {
+                        renderizarListaParticipantes();
+                    }
                 }
             });
         };
