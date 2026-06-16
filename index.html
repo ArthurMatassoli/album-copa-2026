@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Álbum da Copa do Mundo 2026</title>
+    <title>Álbum Copa 2026 - Colaborativo</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .no-context { -webkit-touch-callout: none; user-select: none; touch-action: manipulation; }
@@ -20,7 +20,7 @@
     <div id="auth-screen" class="flex-1 items-center justify-center p-4 fade-in overflow-y-auto py-10" style="display: flex;">
         <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-100 my-auto">
             <div class="text-center mb-6">
-                <h1 class="text-3xl font-extrabold text-indigo-900 tracking-tight mb-2">Copa do Mundo 2026</h1>
+                <h1 class="text-3xl font-extrabold text-indigo-900 tracking-tight mb-2">Álbum 2026</h1>
                 <p class="text-slate-500 text-sm" id="auth-subtitle">Faça login ou cadastre-se para acessar.</p>
             </div>
 
@@ -224,7 +224,7 @@
         window.isSignup = true;
         window.currentProjectId = null;
         window.currentProjectData = null; 
-        window.meusProjetos = {}; // Para armazenar todos os dados carregados na dashboard
+        window.meusProjetos = {}; 
         window.unsubscribeAlbum = null;
         window.unsubscribeProjetos = null;
         window.lastSortMode = null;
@@ -234,8 +234,9 @@
         const urlParams = new URLSearchParams(window.location.search);
         let pendingJoinId = urlParams.get('join');
 
+        // Adicionado 'FWC_00' na primeira posição
         const ordemDaFoto = [
-            'FWC_1', 'MEX', 'RSA', 'KOR', 'CZE', 'CAN', 'BIH', 'QAT', 'SUI',
+            'FWC_00', 'FWC_1', 'MEX', 'RSA', 'KOR', 'CZE', 'CAN', 'BIH', 'QAT', 'SUI',
             'BRA', 'MAR', 'HAI', 'SCO', 'USA', 'PAR', 'AUS', 'TUR',
             'GER', 'CUW', 'CIV', 'ECU', 'NED', 'JPN', 'SWE', 'TUN',
             'BEL', 'EGY', 'IRN', 'NZL', 'ESP', 'CPV', 'KSA', 'URU',
@@ -261,6 +262,7 @@
             };
 
             return ordemDaFoto.map((id, index) => {
+                if (id === 'FWC_00') return { id: 'FWC_00', originalId: 'FWC', nome: 'FWC 00', start: 0, end: 0, leituraIndex: index };
                 if (id === 'FWC_1') return { id: 'FWC_1', originalId: 'FWC', nome: 'FWC (1 ao 8)', start: 1, end: 8, leituraIndex: index };
                 if (id === 'FWC_2') return { id: 'FWC_2', originalId: 'FWC', nome: 'FWC (9 ao 19)', start: 9, end: 19, leituraIndex: index };
                 if (id === 'CC') return { id: 'CC', originalId: 'CC', nome: 'Coca-Cola', start: 1, end: 14, leituraIndex: index };
@@ -390,7 +392,6 @@
                     const souConvidado = data.guests && data.guests.includes(myEmail);
                     const removidoPorMim = data.removedBy && data.removedBy.includes(myEmail);
 
-                    // Atualiza a memória global para edição rápida do dash
                     window.meusProjetos[docSnap.id] = data;
 
                     if ((souDono || souConvidado) && !removidoPorMim) {
@@ -576,7 +577,6 @@
                     guests: arrayRemove(email)
                 });
                 
-                // Remove localmente para já dar a resposta visual imediata no modal
                 if (window.currentProjectData && window.currentProjectData.guests) {
                     window.currentProjectData.guests = window.currentProjectData.guests.filter(g => g !== email);
                 }
@@ -644,7 +644,7 @@
                             if (sigla) {
                                 for (let j = 2; j < colunas.length; j++) {
                                     const num = numerosCols[j];
-                                    if (num) {
+                                    if (num !== undefined) {
                                         const valor = colunas[j].toUpperCase();
                                         const sel = selecoes.find(s => s.originalId === sigla && num >= s.start && num <= s.end);
                                         
@@ -724,7 +724,6 @@
 
                     renderizarAlbum(); 
                     
-                    // Se o modal de edição estiver aberto para o dono, recarrega a lista para refletir novas entradas
                     const modalEdicao = document.getElementById('modal-editar-projeto');
                     if (!modalEdicao.classList.contains('hidden')) {
                         renderizarListaParticipantes();
@@ -881,11 +880,13 @@
                         
                         if(btn.className !== baseClass) btn.className = baseClass;
                         
+                        const numDisplay = i === 0 ? '00' : i;
+                        
                         if (status === 2) {
-                            const inner = `${i} <span class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white font-bold ring-2 ring-white">+1</span>`;
+                            const inner = `${numDisplay} <span class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white font-bold ring-2 ring-white">+1</span>`;
                             if(btn.innerHTML !== inner) btn.innerHTML = inner;
                         } else {
-                            if(btn.innerHTML !== String(i)) btn.innerHTML = i;
+                            if(btn.innerHTML !== String(numDisplay)) btn.innerHTML = numDisplay;
                         }
 
                         if (modoOrdenacao === 'repetidas' && status !== 2) {
@@ -939,8 +940,10 @@
                 for (let i = selecao.start; i <= selecao.end; i++) {
                     const key = `${selecao.originalId}-${i}`;
                     const status = figurinhasSalvas[key] || 0;
-                    if (status === 0) { missing.push(i); faltamTotal++; }
-                    else if (status === 2) { repeated.push(i); repetidasTotal++; }
+                    const numFormatado = i === 0 ? '00' : i;
+                    
+                    if (status === 0) { missing.push(numFormatado); faltamTotal++; }
+                    else if (status === 2) { repeated.push(numFormatado); repetidasTotal++; }
                 }
                 
                 const label = `*${selecao.nome} (${selecao.originalId})*`;
