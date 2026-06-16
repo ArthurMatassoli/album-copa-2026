@@ -114,10 +114,17 @@
                     </select>
 
                     <input type="file" id="csv-file-input" class="hidden" accept=".csv, .txt" onchange="importarCSV(event)">
-                    <button onclick="triggerCSV()" class="text-purple-600 hover:bg-purple-50 border border-purple-200 text-sm font-semibold transition flex items-center bg-white py-1.5 px-3 rounded-md shadow-sm">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                        <span class="hidden md:inline">Importar</span>
-                    </button>
+                    
+                    <div class="flex gap-1 border border-purple-200 rounded-md bg-white shadow-sm overflow-hidden">
+                        <button onclick="triggerCSV()" class="text-purple-600 hover:bg-purple-50 text-sm font-semibold transition flex items-center py-1.5 px-3 border-r border-purple-100" title="Importar CSV">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                            <span class="hidden md:inline">Importar</span>
+                        </button>
+                        <button onclick="exportarCSV()" class="text-purple-600 hover:bg-purple-50 text-sm font-semibold transition flex items-center py-1.5 px-3" title="Exportar CSV">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            <span class="hidden md:inline">Exportar</span>
+                        </button>
+                    </div>
 
                     <button onclick="gerarLinkConvite()" class="text-blue-600 hover:bg-blue-50 border border-blue-200 text-sm font-semibold transition flex items-center bg-white py-1.5 px-3 rounded-md shadow-sm">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
@@ -129,7 +136,6 @@
                         <span class="hidden md:inline">Trocar</span>
                     </button>
 
-                    <!-- Botão de Editar Projeto -->
                     <button id="btn-editar-projeto" onclick="abrirModalEditarProjeto()" class="hidden p-2 text-slate-500 hover:bg-slate-100 rounded-md transition outline-none" title="Editar Álbum">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                     </button>
@@ -191,9 +197,7 @@
             <input type="password" id="editar-senha" class="w-full border rounded-lg p-2 mb-4 outline-none focus:ring-2 focus:ring-indigo-500">
             
             <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Participantes (Convidados)</label>
-            <div id="lista-participantes" class="max-h-32 overflow-y-auto mb-5 border border-slate-200 rounded p-2 bg-slate-50 space-y-1">
-                <!-- Lista de convidados será injetada aqui -->
-            </div>
+            <div id="lista-participantes" class="max-h-32 overflow-y-auto mb-5 border border-slate-200 rounded p-2 bg-slate-50 space-y-1"></div>
 
             <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
                 <button onclick="fecharModalEditarProjeto()" class="px-4 py-2 text-slate-500 hover:bg-slate-100 rounded-lg transition font-semibold">Cancelar</button>
@@ -234,7 +238,6 @@
         const urlParams = new URLSearchParams(window.location.search);
         let pendingJoinId = urlParams.get('join');
 
-        // Adicionado 'FWC_00' na primeira posição
         const ordemDaFoto = [
             'FWC_00', 'FWC_1', 'MEX', 'RSA', 'KOR', 'CZE', 'CAN', 'BIH', 'QAT', 'SUI',
             'BRA', 'MAR', 'HAI', 'SCO', 'USA', 'PAR', 'AUS', 'TUR',
@@ -608,9 +611,62 @@
         };
 
         // -------------------------
-        // IMPORTAÇÃO DE CSV
+        // IMPORTAÇÃO E EXPORTAÇÃO DE CSV
         // -------------------------
         window.triggerCSV = () => document.getElementById('csv-file-input').click();
+
+        window.exportarCSV = () => {
+            let csvContent = "";
+            let header = ["", "Seleções"];
+            for (let i = 0; i <= 20; i++) header.push(i);
+            header.push("Total");
+            
+            csvContent += header.join(",") + "\r\n";
+
+            // Agrupa siglas para a listagem (Ex: FWC aparece uma vez só mesmo seccionada)
+            let siglaSet = new Set();
+            let siglaOrder = [];
+            selecoes.forEach(s => {
+                if (!siglaSet.has(s.originalId)) {
+                    siglaSet.add(s.originalId);
+                    siglaOrder.push(s.originalId);
+                }
+            });
+
+            siglaOrder.forEach(sigla => {
+                let row = ["", sigla];
+                let countTemos = 0;
+
+                for (let i = 0; i <= 20; i++) {
+                    const def = selecoes.find(s => s.originalId === sigla && i >= s.start && i <= s.end);
+                    if (def) {
+                        const status = figurinhasSalvas[`${sigla}-${i}`] || 0;
+                        if (status > 0) {
+                            row.push("TRUE");
+                            countTemos++;
+                        } else {
+                            row.push("FALSE");
+                        }
+                    } else {
+                        row.push(""); // Se a seleção não tiver esse número (ex: CC do 15 ao 20)
+                    }
+                }
+                row.push(countTemos);
+                csvContent += row.join(",") + "\r\n";
+            });
+
+            // Cria o arquivo e baixa automaticamente
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            const nomeAlbumLimpo = document.getElementById('album-title-display').textContent.replace(/\s+/g, '_');
+            
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Album_Copa_${nomeAlbumLimpo}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
 
         window.importarCSV = async (event) => {
             const file = event.target.files[0];
@@ -629,7 +685,7 @@
                     for (let i = 0; i < linhas.length; i++) {
                         const colunas = linhas[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
                         
-                        if (colunas.includes('Seleções') && colunas.includes('1')) {
+                        if (colunas.includes('Seleções') && (colunas.includes('1') || colunas.includes('0'))) {
                             for (let j = 0; j < colunas.length; j++) {
                                 const val = parseInt(colunas[j]);
                                 if (!isNaN(val)) {
@@ -713,7 +769,9 @@
                     window.currentProjectData = data; 
                     
                     document.getElementById('album-title-display').textContent = data.nomeProjeto;
-                    selecoes = data.selecoes || [];
+                    
+                    // IMPORTANTE: Sempre força carregar o layout padrão atualizado do código (Assim o FWC 00 sempre vai aparecer)
+                    selecoes = gerarSelecoesPadrao();
                     figurinhasSalvas = data.figurinhasSalvas || {};
 
                     if (data.owner === auth.currentUser.email) {
