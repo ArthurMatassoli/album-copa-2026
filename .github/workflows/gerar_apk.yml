@@ -17,13 +17,13 @@ jobs:
         with:
           node-version: 20
 
-      - name: 3. Instalar Java (Necessário para Android)
+      - name: 3. Instalar Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: 4. Transformar o seu Site em App (Capacitor)
+      - name: 4. Transformar o seu Site em App
         run: |
           mkdir www_app
           rsync -av --exclude='www_app' --exclude='.git' --exclude='.github' ./ www_app/
@@ -34,13 +34,26 @@ jobs:
           npx cap init "Album Copa 2026" "com.seunome.albumcopa" --web-dir www_app
           npx cap add android
 
-      - name: 5. Construir o arquivo .APK
+      - name: 5. Corrigir erro do Kotlin (Classes Duplicadas)
+        run: |
+          cat <<EOF >> android/build.gradle
+          subprojects {
+              configurations.all {
+                  resolutionStrategy {
+                      exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'
+                      exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
+                  }
+              }
+          }
+          EOF
+
+      - name: 6. Construir o arquivo .APK
         run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      - name: 6. Salvar o .APK para Download
+      - name: 7. Salvar o .APK para Download
         uses: actions/upload-artifact@v4
         with:
           name: Meu-Aplicativo-Album-Copa
