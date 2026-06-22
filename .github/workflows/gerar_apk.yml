@@ -1,0 +1,51 @@
+name: Criar App Android
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch: # Permite que você rode manualmente clicando num botão
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 1. Pegar os arquivos do seu GitHub
+        uses: actions/checkout@v4
+
+      - name: 2. Instalar Node.js na nuvem
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 3. Instalar Java (Necessário para Android)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: 4. Transformar o seu Site em App (Capacitor)
+        run: |
+          # Cria uma pasta para o aplicativo
+          mkdir www_app
+          # Copia todos os seus arquivos (HTML, CSS, JS) para o aplicativo
+          rsync -av --exclude='www_app' --exclude='.git' --exclude='.github' ./ www_app/
+          
+          # Instala as ferramentas do app
+          npm init -y
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+          
+          # Inicia a criação do Android
+          npx cap init "Album Copa 2026" "com.seunome.albumcopa" --web-dir www_app
+          npx cap add android
+
+      - name: 5. Construir o arquivo .APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: 6. Salvar o .APK para Download
+        uses: actions/upload-artifact@v4
+        with:
+          name: Meu-Aplicativo-Album-Copa
+          path: android/app/build/outputs/apk/debug/app-debug.apk
