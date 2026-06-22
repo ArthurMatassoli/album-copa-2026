@@ -16,6 +16,17 @@
         html { scroll-behavior: smooth; }
     </style>
 </head>
+    <!-- Conecta o Manifest -->
+<link rel="manifest" href="/manifest.json">
+
+<!-- Ativa o Service Worker -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js');
+    });
+  }
+</script>
 <body class="bg-slate-50 text-slate-800 font-sans h-screen flex flex-col selection:bg-indigo-100 selection:text-indigo-900">
 
     <div id="auth-screen" class="flex-1 items-center justify-center p-4 fade-in overflow-y-auto py-10" style="display: flex;">
