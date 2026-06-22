@@ -1,0 +1,74 @@
+name: Criar App Android (Login Google)
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 1. Pegar arquivos do GitHub
+        uses: actions/checkout@v4
+
+      - name: 2. Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 3. Instalar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: 4. Instalar Ferramenta do Google (Bubblewrap)
+        run: npm i -g @GoogleChromeLabs/bubblewrap
+
+      - name: 5. Configurar Ferramenta na Nuvem
+        run: |
+          mkdir -p ~/.bubblewrap
+          echo '{"jdkPath":"'"$JAVA_HOME"'","androidSdkPath":"'"$ANDROID_HOME"'"}' > ~/.bubblewrap/config.json
+
+      - name: 6. Criar Chave de Segurança
+        run: keytool -genkeypair -v -keystore android.keystore -alias android -keyalg RSA -keysize 2048 -validity 10000 -storepass senha123 -keypass senha123 -dname "CN=Album,O=Album,C=BR"
+
+      - name: 7. Gerar Configurações do App
+        run: |
+          cat <<EOF > twa-manifest.json
+          {
+            "packageId": "com.arthur.album2026",
+            "host": "arthurmatassoli.github.io",
+            "name": "Álbum 2026",
+            "launcherName": "Álbum 2026",
+            "display": "standalone",
+            "themeColor": "#125b34",
+            "navigationColor": "#ffffff",
+            "backgroundColor": "#ffffff",
+            "startUrl": "/album-copa-2026/",
+            "iconUrl": "https://www.pwabuilder.com/assets/icons/icon_512.png",
+            "maskableIconUrl": "https://www.pwabuilder.com/assets/icons/icon_512.png",
+            "signingKey": {
+              "path": "android.keystore",
+              "alias": "android"
+            },
+            "appVersionCode": 1,
+            "appVersionName": "1.0",
+            "generatorApp": "bubblewrap-cli",
+            "webManifestUrl": "https://arthurmatassoli.github.io/album-copa-2026/manifest.json",
+            "fallbackType": "customtabs",
+            "features": {}
+          }
+          EOF
+
+      - name: 8. Construir o Aplicativo Final
+        run: |
+          yes | bubblewrap generate
+          bubblewrap build --keyPassword=senha123 --keystorePassword=senha123
+
+      - name: 9. Salvar o .APK para Download
+        uses: actions/upload-artifact@v4
+        with:
+          name: App-Album-Copa-Login-Google
+          path: app-release-signed.apk
