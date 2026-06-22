@@ -24,12 +24,12 @@ jobs:
           java-version: '17'
 
       - name: 4. Instalar Ferramenta do Google (Bubblewrap)
-        run: npm i -g @GoogleChromeLabs/bubblewrap
+        run: npm i -g @bubblewrap/cli
 
       - name: 5. Configurar Ferramenta na Nuvem
         run: |
           mkdir -p ~/.bubblewrap
-          echo '{"jdkPath":"'"$JAVA_HOME"'","androidSdkPath":"'"$ANDROID_HOME"'"}' > ~/.bubblewrap/config.json
+          echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"$ANDROID_HOME\"}" > ~/.bubblewrap/config.json
 
       - name: 6. Criar Chave de Segurança
         run: keytool -genkeypair -v -keystore android.keystore -alias android -keyalg RSA -keysize 2048 -validity 10000 -storepass senha123 -keypass senha123 -dname "CN=Album,O=Album,C=BR"
