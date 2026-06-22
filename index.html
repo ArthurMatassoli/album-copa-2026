@@ -16,14 +16,14 @@
         html { scroll-behavior: smooth; }
     </style>
 </head>
-    <!-- Conecta o Manifest -->
-<link rel="manifest" href="/manifest.json">
+<!-- Conecta o Manifest (sem a barra) -->
+<link rel="manifest" href="manifest.json">
 
-<!-- Ativa o Service Worker -->
+<!-- Ativa o Service Worker (sem a barra) -->
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js');
+      navigator.serviceWorker.register('sw.js');
     });
   }
 </script>
