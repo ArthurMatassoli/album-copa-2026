@@ -1,29 +1,25 @@
 {
   "packageId": "com.arthur.album2026",
   "host": "arthurmatassoli.github.io",
-  "name": "Álbum da Copa 2026",
-  "launcherName": "Álbum 2026",
+  "name": "Álbum 2026",
+  "launcherName": "Álbum",
   "display": "standalone",
   "themeColor": "#125b34",
   "navigationColor": "#ffffff",
-  "navigationColorDark": "#121212",
+  "navigationColorDark": "#000000",
   "navigationDividerColor": "#000000",
   "navigationDividerColorDark": "#000000",
   "backgroundColor": "#ffffff",
   "enableNotifications": false,
   "startUrl": "/album-copa-2026/",
   "iconUrl": "https://www.pwabuilder.com/assets/icons/icon_512.png",
-  "maskableIconUrl": "https://www.pwabuilder.com/assets/icons/icon_192.png",
-  "splashScreenFadeOutDuration": 300,
+  "maskableIconUrl": "https://www.pwabuilder.com/assets/icons/icon_512.png",
+  "splashScreenColors": "#125b34",
   "signingKey": {
-    "path": "release.jks",
-    "alias": "android"
+    "path": "android.keystore",
+    "alias": "androiddebugkey"
   },
-  "appVersionCode": 1,
-  "appVersionName": "1.0.0",
-  "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://arthurmatassoli.github.io/album-copa-2026/manifest.json",
-  "fallbackType": "customtabs",
-  "features": {}
+  "fallbackType": "customtabs"
 }
