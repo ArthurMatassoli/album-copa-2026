@@ -1,7 +1,7 @@
 {
   "name": "Álbum da Copa 2026",
   "short_name": "Álbum 2026",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#125b34",
