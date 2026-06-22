@@ -12,29 +12,16 @@ jobs:
       - name: 1. Pegar arquivos do GitHub
         uses: actions/checkout@v4
 
-      - name: 2. Instalar Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: 3. Instalar Java
+      - name: 2. Preparar o Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: 4. Instalar Ferramenta do Google
-        run: npm i -g @bubblewrap/cli
-
-      - name: 5. Configurar Ferramenta na Nuvem
-        run: |
-          mkdir -p ~/.bubblewrap
-          echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"$ANDROID_HOME\"}" > ~/.bubblewrap/config.json
-
-      - name: 6. Criar Chave de Segurança
+      - name: 3. Criar Chave de Segurança do Aplicativo
         run: keytool -genkeypair -v -keystore android.keystore -alias android -keyalg RSA -keysize 2048 -validity 10000 -storepass senha123 -keypass senha123 -dname "CN=Album,O=Album,C=BR"
 
-      - name: 7. Gerar Configurações do App
+      - name: 4. Gerar Configurações do App
         run: |
           cat <<EOF > twa-manifest.json
           {
@@ -62,13 +49,9 @@ jobs:
           }
           EOF
 
-      - name: 8. Construir o Aplicativo Final
+      - name: 5. Construir o Aplicativo Final (Usando Docker Oficial do Google)
         run: |
-          bubblewrap update --skipVersionUpgrade
-          bubblewrap build --keyPassword=senha123 --keystorePassword=senha123
+          docker run --rm -v "${{ github.workspace }}:/workspace" -w "/workspace" ghcr.io/googlechromelabs/bubblewrap:latest update --skipVersionUpgrade
+          docker run --rm -v "${{ github.workspace }}:/workspace" -w "/workspace" ghcr.io/googlechromelabs/bubblewrap:latest build --keyPassword=senha123 --keystorePassword=senha123
 
-      - name: 9. Salvar o .APK para Download
-        uses: actions/upload-artifact@v4
-        with:
-          name: App-Album-Copa-Login-Google
-          path: app-release-signed.apk
+      - name: 6. Salvar o .APK para Download
