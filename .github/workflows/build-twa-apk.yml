@@ -64,8 +64,8 @@ jobs:
           bubblewrap init --manifest=https://arthurmatassoli.github.io/album-copa-2026/manifest.json --directory=./ --meta-data=./
         fi
         
-        # Constrói ignorando erros de versão e injetando a chave gerada acima
-        echo "no" | bubblewrap build --skipUpdateCheck --signingKeyPath release.jks --signingKeyAlias "$KEY_ALIAS"
+        # Como a pasta android pode não ser "comitada" pro git, vamos garantir que ele regere o projeto Android se não encontrar o build do Gradle.
+        echo "yes" | bubblewrap build --skipUpdateCheck --signingKeyPath release.jks --signingKeyAlias "$KEY_ALIAS"
 
     - name: List outputs
       run: ls -la
@@ -76,7 +76,7 @@ jobs:
         name: twa-release-apk
         path: "*.apk"
 
-    - name: Upload Release AAB
+    - name: Upload Release AAB (Google Play bundle)
       uses: actions/upload-artifact@v4
       with:
         name: twa-release-aab
