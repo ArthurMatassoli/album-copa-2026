@@ -64,9 +64,13 @@ jobs:
           bubblewrap init --manifest=https://arthurmatassoli.github.io/album-copa-2026/manifest.json --directory=./ --meta-data=./
         fi
         
-        # A forma mais garantida de passar pelas perguntas usando os padrões e recriando o Android se precisar
-        yes "" | bubblewrap build --skipUpdateCheck --signingKeyPath release.jks --signingKeyAlias "$KEY_ALIAS"
+        # A forma mais garantida de passar pelas perguntas sem entrar em loop infinito:
+        # 1. Fazemos update forçando a pular as perguntas de versão. Ele criará as pastas nativas caso precisem ser geradas.
+        bubblewrap update --skipVersionUpgrade || echo "Update skipped"
         
+        # 2. Fazemos o build. O projeto já existirá ou estará atualizado, logo nenhuma pergunta será feita.
+        bubblewrap build --skipUpdateCheck --signingKeyPath release.jks --signingKeyAlias "$KEY_ALIAS"
+
     - name: List outputs
       run: ls -la
 
