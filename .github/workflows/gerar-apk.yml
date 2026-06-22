@@ -1,0 +1,52 @@
+name: Gerar APK TWA
+
+on: 
+  workflow_dispatch: # Permite disparar o script manualmente clicando em um botão
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Instalar Bubblewrap CLI
+        run: npm install -g @bubblewrap/cli
+
+      - name: Configurar Caminhos do Bubblewrap
+        run: |
+          mkdir -p ~/.bubblewrap
+          echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"$ANDROID_SDK_ROOT\"}" > ~/.bubblewrap/config.json
+
+      - name: Gerar Keystore de Teste
+        # Cria uma chave genérica para o build não travar pedindo senha
+        run: |
+          keytool -genkey -v -keystore android.keystore -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 1000 -storepass android -keypass android -dname "CN=Android Debug,O=Android,C=US"
+
+      - name: Executar o Bubblewrap Build
+        env:
+          # Passa as senhas da chave de teste que acabamos de criar automaticamente
+          BUBBLEWRAP_KEYSTORE_PASSWORD: android
+          BUBBLEWRAP_KEY_PASSWORD: android
+        run: |
+          yes | bubblewrap build
+
+      - name: Exportar o APK pronto
+        uses: actions/upload-artifact@v4
+        with:
+          name: Album-Copa-2026-APK
+          path: app-release-signed.apk
