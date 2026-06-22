@@ -23,7 +23,7 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: 4. Instalar Ferramenta do Google (Bubblewrap)
+      - name: 4. Instalar Ferramenta do Google
         run: npm i -g @bubblewrap/cli
 
       - name: 5. Configurar Ferramenta na Nuvem
@@ -64,8 +64,8 @@ jobs:
 
       - name: 8. Construir o Aplicativo Final
         run: |
-          yes | bubblewrap update
-          yes | bubblewrap build --keyPassword=senha123 --keystorePassword=senha123
+          bubblewrap update --skipVersionUpgrade
+          bubblewrap build --keyPassword=senha123 --keystorePassword=senha123
 
       - name: 9. Salvar o .APK para Download
         uses: actions/upload-artifact@v4
