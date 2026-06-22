@@ -1,4 +1,4 @@
-name: Criar App Android (Login Google)
+name: Criar App Android Definitivo
 
 on:
   push:
@@ -18,12 +18,12 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: 3. Criar Chave de Segurança do Aplicativo
+      - name: 3. Criar Chave de Segurança
         run: keytool -genkeypair -v -keystore android.keystore -alias android -keyalg RSA -keysize 2048 -validity 10000 -storepass senha123 -keypass senha123 -dname "CN=Album,O=Album,C=BR"
 
       - name: 4. Gerar Configurações do App
         run: |
-          cat <<EOF > twa-manifest.json
+          cat << 'EOF' > twa-manifest.json
           {
             "packageId": "com.arthur.album2026",
             "host": "arthurmatassoli.github.io",
@@ -49,9 +49,13 @@ jobs:
           }
           EOF
 
-      - name: 5. Construir o Aplicativo Final (Usando Docker Oficial do Google)
+      - name: 5. Construir com Docker
         run: |
           docker run --rm -v "${{ github.workspace }}:/workspace" -w "/workspace" ghcr.io/googlechromelabs/bubblewrap:latest update --skipVersionUpgrade
           docker run --rm -v "${{ github.workspace }}:/workspace" -w "/workspace" ghcr.io/googlechromelabs/bubblewrap:latest build --keyPassword=senha123 --keystorePassword=senha123
 
       - name: 6. Salvar o .APK para Download
+        uses: actions/upload-artifact@v4
+        with:
+          name: App-Album-Copa
+          path: app-release-signed.apk
