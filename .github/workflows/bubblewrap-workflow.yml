@@ -64,9 +64,9 @@ jobs:
           bubblewrap init --manifest=https://arthurmatassoli.github.io/album-copa-2026/manifest.json --directory=./ --meta-data=./
         fi
         
-        # Como a pasta android pode não ser "comitada" pro git, vamos garantir que ele regere o projeto Android se não encontrar o build do Gradle.
-        echo "yes" | bubblewrap build --skipUpdateCheck --signingKeyPath release.jks --signingKeyAlias "$KEY_ALIAS"
-
+        # A forma mais garantida de passar pelas perguntas usando os padrões e recriando o Android se precisar
+        yes "" | bubblewrap build --skipUpdateCheck --signingKeyPath release.jks --signingKeyAlias "$KEY_ALIAS"
+        
     - name: List outputs
       run: ls -la
 
