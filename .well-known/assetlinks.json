@@ -1,10 +1,12 @@
-[{
-  "relation": ["delegate_permission/common.handle_all_urls"],
-  "target": {
-    "namespace": "android_app",
-    "package_name": "com.arthur.album2026",
-    "sha256_cert_fingerprints": [
-      "SUA:CHAVE:SHA:256:AQUI:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF"
-    ]
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.arthur.album2026",
+      "sha256_cert_fingerprints": [
+        "5F:E3:EB:48:44:92:78:16:DA:60:66:67:50:10:4D:92:4A:9E:DE:C3:04:6D:D9:27:98:31:2E:C2:E0:D7:8B:89"
+      ]
+    }
   }
-}]
+]
