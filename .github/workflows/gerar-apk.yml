@@ -1,4 +1,6 @@
-name: Gerar TWA com Bubblewrap
+# Geração automática não-interativa do APK/AAB usando Bubblewrap no GitHub Actions
+
+name: Build TWA with Bubblewrap
 
 on:
   push:
@@ -12,12 +14,12 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    - name: Setup Node.js (Corrige Depreciação)
+    - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
         node-version: 22
 
-    - name: Setup JDK
+    - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
         java-version: '17'
@@ -26,77 +28,46 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    - name: Install Bubblewrap
+    - name: Install Bubblewrap CLI
       run: npm install -g @bubblewrap/cli
 
-    - name: Configurar Caminhos (Non-interactive)
+    - name: Configure Bubblewrap Non-interactively
       run: |
         mkdir -p ~/.bubblewrap
         echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"$ANDROID_SDK_ROOT\"}" > ~/.bubblewrap/config.json
+        cat ~/.bubblewrap/config.json # Verifica se os caminhos foram salvos
 
-    - name: Gerar Keystore Temporario Automaticamente (Evita o Erro 130)
+    - name: Decode Keystore Fingerprint and Configuration
       run: |
-        # Ao invés de travar pedindo permissão, ele gera o próprio arquivo de assinatura para garantir a construção em linha de comando.
-        echo "Gerando keystore para gerar o APK de forma 100% autônoma..."
-        keytool -genkeypair -v -keystore release.jks -keyalg RSA -keysize 2048 -validity 1000 -alias my-alias -dname "CN=Arthur, OU=App, O=Album, L=BR, ST=BR, C=BR" -storepass password123 -keypass password123
-        echo "SENHA_MAGICA=password123" >> $GITHUB_ENV
-        echo "MEU_ALIAS=my-alias" >> $GITHUB_ENV
+        echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > release.jks
 
-    - name: Criar twa-manifest.json Dinamicamente (Evita o Erro 130 do Bubblewrap)
-      run: |
-        # Instanciar as respostas fixas ao invés do init interativo
-        cat << EOF > twa-manifest.json
-        {
-          "packageId": "com.arthur.album2026",
-          "host": "arthurmatassoli.github.io",
-          "name": "Álbum da Copa 2026",
-          "launcherName": "Álbum 2026",
-          "display": "standalone",
-          "themeColor": "#125b34",
-          "themeColorDark": "#125b34",
-          "navigationColor": "#ffffff",
-          "navigationColorDark": "#000000",
-          "navigationDividerColor": "#00000000",
-          "navigationDividerColorDark": "#00000000",
-          "backgroundColor": "#ffffff",
-          "startUrl": "/album-copa-2026/",
-          "iconUrl": "https://www.pwabuilder.com/assets/icons/icon_512.png",
-          "maskableIconUrl": "https://www.pwabuilder.com/assets/icons/icon_512.png",
-          "splashScreenFadeOutDuration": 300,
-          "signingKey": {
-            "path": "release.jks",
-            "alias": "my-alias"
-          },
-          "appVersionName": "1.0.0",
-          "appVersionCode": 1,
-          "shortcuts": [],
-          "generatorApp": "bubblewrap-cli",
-          "webManifestUrl": "https://arthurmatassoli.github.io/album-copa-2026/manifest.json",
-          "fallbackType": "customtabs",
-          "features": {
-            "playBilling": {
-              "enabled": false
-            }
-          },
-          "alphaDependencies": {
-            "enabled": false
-          },
-          "enableNotifications": true,
-          "orientation": "default",
-          "fingerprints": []
-        }
-        EOF
-
-    - name: Build TWA APK
+    - name: Build TWA APK and AAB
       env:
-        BUBBLEWRAP_KEYSTORE_PASSWORD: ${{ env.SENHA_MAGICA }}
-        BUBBLEWRAP_KEY_PASSWORD: ${{ env.SENHA_MAGICA }}
+        BUBBLEWRAP_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        BUBBLEWRAP_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
       run: |
-        # Como o manifesto e as chaves já foram injetadas nos comandos anteriores, compila direto
-        bubblewrap build
+        # Caso o arquivo twa-manifest.json não esteja com o nome exato do Keystore ou alias, podemos forçar a injeção:
+        # Se você já tiver o twa-manifest.json na raiz, o Bubblewrap o usará diretamente.
+        # Caso contrário, inicialize usando o comando abaixo:
+        if [ ! -f twa-manifest.json ]; then
+          bubblewrap init --manifest=https://arthurmatassoli.github.io/album-copa-2026/manifest.json --directory=./ --meta-data=./
+        fi
+        
+        # Verifica se o twa-manifest.json provido tem atualizações ou se o build avisa que não tem checksum
+        # E construímos passando --skipUpdateCheck e/ou injetando 'no' para quando perguntar se deseja regerar
+        echo "no" | bubblewrap build --skipUpdateCheck --signingKeyPath release.jks --signingKeyAlias "${{ secrets.KEY_ALIAS }}"
 
-    - name: Upload do APK Finalizado
+    - name: List outputs
+      run: ls -la
+
+    - name: Upload Signed APK
       uses: actions/upload-artifact@v4
       with:
-        name: meu-aplicativo-twa-apk
+        name: twa-release-apk
         path: "*.apk"
+
+    - name: Upload Release AAB (Google Play bundle)
+      uses: actions/upload-artifact@v4
+      with:
+        name: twa-release-aab
+        path: "*.aab"
