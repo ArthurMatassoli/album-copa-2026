@@ -1,29 +1,28 @@
-# Geração automática não-interativa do APK/AAB usando Bubblewrap no GitHub Actions
-
-name: Build TWA with Bubblewrap
+name: Generate Android App with Bubblewrap
 
 on:
   push:
-    branches: [ "main", "master" ]
-  workflow_dispatch:
+    branches:
+      - main  # Ou a branch que preferir
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-    - name: Checkout Repository
+    - name: Checkout the repository
       uses: actions/checkout@v4
 
-    - name: Set up Node.js
+    - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 22
+        node-version: '20'
 
-    - name: Set up JDK 17
+    - name: Setup Java JDK
       uses: actions/setup-java@v4
       with:
-        java-version: '17'
         distribution: 'temurin'
+        java-version: '17'
 
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
@@ -31,7 +30,7 @@ jobs:
     - name: Install Bubblewrap CLI
       run: npm install -g @bubblewrap/cli
 
-    - name: Configure Bubblewrap Non-interactively
+    - name: Configure Bubblewrap Environment
       run: |
         mkdir -p ~/.bubblewrap
         echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"$ANDROID_SDK_ROOT\"}" > ~/.bubblewrap/config.json
@@ -64,10 +63,13 @@ jobs:
           bubblewrap init --manifest=https://arthurmatassoli.github.io/album-copa-2026/manifest.json --directory=./ --meta-data=./
         fi
         
+        # O Bubblewrap das versões mais recentes falha ao gerar o build.gradle se faltar o campo splashScreenFadeOutDuration.
+        # Vamos garantir que ele existe no twa-manifest.json para evitar o erro de sintaxe (, no Groovy).
+        node -e "const fs = require('fs'); if (fs.existsSync('twa-manifest.json')) { let m = JSON.parse(fs.readFileSync('twa-manifest.json')); if (m.splashScreenFadeOutDuration === undefined) m.splashScreenFadeOutDuration = 300; fs.writeFileSync('twa-manifest.json', JSON.stringify(m, null, 2)); }"
+        
         # A forma mais garantida de passar pelas perguntas sem entrar em loop infinito:
         # 1. Fazemos update forçando a pular as perguntas de versão. Ele criará as pastas nativas caso precisem ser geradas.
         bubblewrap update --skipVersionUpgrade || echo "Update skipped"
-        
         # 2. Fazemos o build. O projeto já existirá ou estará atualizado, logo nenhuma pergunta será feita.
         bubblewrap build --skipUpdateCheck --signingKeyPath release.jks --signingKeyAlias "$KEY_ALIAS"
 
