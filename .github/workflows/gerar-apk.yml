@@ -1,52 +1,102 @@
-name: Gerar APK TWA
+name: Gerar TWA com Bubblewrap
 
-on: 
-  workflow_dispatch: # Permite disparar o script manualmente clicando em um botão
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout do código
-        uses: actions/checkout@v4
+    - name: Checkout Repository
+      uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+    - name: Setup Node.js (Corrige Depreciação)
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22
 
-      - name: Setup Java JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
+    - name: Setup JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
 
-      - name: Instalar Bubblewrap CLI
-        run: npm install -g @bubblewrap/cli
+    - name: Install Bubblewrap
+      run: npm install -g @bubblewrap/cli
 
-      - name: Configurar Caminhos do Bubblewrap
-        run: |
-          mkdir -p ~/.bubblewrap
-          echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"$ANDROID_SDK_ROOT\"}" > ~/.bubblewrap/config.json
+    - name: Configurar Caminhos (Non-interactive)
+      run: |
+        mkdir -p ~/.bubblewrap
+        echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"$ANDROID_SDK_ROOT\"}" > ~/.bubblewrap/config.json
 
-      - name: Gerar Keystore de Teste
-        # Cria uma chave genérica para o build não travar pedindo senha
-        run: |
-          keytool -genkey -v -keystore android.keystore -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 1000 -storepass android -keypass android -dname "CN=Android Debug,O=Android,C=US"
+    - name: Gerar Keystore Temporario Automaticamente (Evita o Erro 130)
+      run: |
+        # Ao invés de travar pedindo permissão, ele gera o próprio arquivo de assinatura para garantir a construção em linha de comando.
+        echo "Gerando keystore para gerar o APK de forma 100% autônoma..."
+        keytool -genkeypair -v -keystore release.jks -keyalg RSA -keysize 2048 -validity 1000 -alias my-alias -dname "CN=Arthur, OU=App, O=Album, L=BR, ST=BR, C=BR" -storepass password123 -keypass password123
+        echo "SENHA_MAGICA=password123" >> $GITHUB_ENV
+        echo "MEU_ALIAS=my-alias" >> $GITHUB_ENV
 
-      - name: Executar o Bubblewrap Build
-        env:
-          # Passa as senhas da chave de teste que acabamos de criar automaticamente
-          BUBBLEWRAP_KEYSTORE_PASSWORD: android
-          BUBBLEWRAP_KEY_PASSWORD: android
-        run: |
-          yes | bubblewrap build
+    - name: Criar twa-manifest.json Dinamicamente (Evita o Erro 130 do Bubblewrap)
+      run: |
+        # Instanciar as respostas fixas ao invés do init interativo
+        cat << EOF > twa-manifest.json
+        {
+          "packageId": "com.arthur.album2026",
+          "host": "arthurmatassoli.github.io",
+          "name": "Álbum da Copa 2026",
+          "launcherName": "Álbum 2026",
+          "display": "standalone",
+          "themeColor": "#125b34",
+          "themeColorDark": "#125b34",
+          "navigationColor": "#ffffff",
+          "navigationColorDark": "#000000",
+          "navigationDividerColor": "#00000000",
+          "navigationDividerColorDark": "#00000000",
+          "backgroundColor": "#ffffff",
+          "startUrl": "/album-copa-2026/",
+          "iconUrl": "https://www.pwabuilder.com/assets/icons/icon_512.png",
+          "maskableIconUrl": "https://www.pwabuilder.com/assets/icons/icon_512.png",
+          "splashScreenFadeOutDuration": 300,
+          "signingKey": {
+            "path": "release.jks",
+            "alias": "my-alias"
+          },
+          "appVersionName": "1.0.0",
+          "appVersionCode": 1,
+          "shortcuts": [],
+          "generatorApp": "bubblewrap-cli",
+          "webManifestUrl": "https://arthurmatassoli.github.io/album-copa-2026/manifest.json",
+          "fallbackType": "customtabs",
+          "features": {
+            "playBilling": {
+              "enabled": false
+            }
+          },
+          "alphaDependencies": {
+            "enabled": false
+          },
+          "enableNotifications": true,
+          "orientation": "default",
+          "fingerprints": []
+        }
+        EOF
 
-      - name: Exportar o APK pronto
-        uses: actions/upload-artifact@v4
-        with:
-          name: Album-Copa-2026-APK
-          path: app-release-signed.apk
+    - name: Build TWA APK
+      env:
+        BUBBLEWRAP_KEYSTORE_PASSWORD: ${{ env.SENHA_MAGICA }}
+        BUBBLEWRAP_KEY_PASSWORD: ${{ env.SENHA_MAGICA }}
+      run: |
+        # Como o manifesto e as chaves já foram injetadas nos comandos anteriores, compila direto
+        bubblewrap build
+
+    - name: Upload do APK Finalizado
+      uses: actions/upload-artifact@v4
+      with:
+        name: meu-aplicativo-twa-apk
+        path: "*.apk"
